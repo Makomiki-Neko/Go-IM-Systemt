@@ -1,0 +1,32 @@
+Name: gateway-api
+Host: 0.0.0.0
+Port: 8889
+
+Verbose: true
+
+RabbitMQ:
+  Host: "localhost"
+  Port: 5672
+  Username: "guest"
+  Password: "guest"
+  VHost: "/"
+
+JwtAuth:
+  AccessSecret: "your-secret-key-2026-never-leak"
+
+RedisConf:
+  Host: 127.0.0.1:6379
+  Pass: ""
+  DB: 0
+
+ChatRpc:
+  Etcd:
+    Hosts:
+    - 127.0.0.1:12379
+    Key: chat.rpc
+
+SeaweedFS_S3:
+  Region: "ap-northeast-2" # 区域是 SDK 必填项，SeaweedFS 不校验
+  Endpoint: "http://localhost:8333" # S3 Gateway 地址
+  AccessKey: "SEAWEEDFS_S3_ACCESS_KEY"
+  SecretKey: "SEAWEEDFS_S3_SECRET_KEY"

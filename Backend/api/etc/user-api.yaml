@@ -1,0 +1,37 @@
+Name: User-api
+Host: 0.0.0.0
+Port: 8888
+Timeout: 60000
+
+# JWT鉴权配置，节点名必须和api文件中jwt: 后面的标识完全一致
+Auth:
+  AccessSecret: "your-secret-key-2026-never-leak"  # 必填：签名密钥，生产环境务必保密
+  AccessExpire: 3600                              # 必填：Token有效期，单位：秒
+  RefreshThreshold: 90  # AccessToken到期剩余时间
+Verbose: true
+
+# RPC客户端配置
+UserRpc:
+  Etcd:
+    Hosts:
+    - 127.0.0.1:12379
+    Key: user.rpc
+
+RelationRpc:
+  Etcd:
+    Hosts:
+    - 127.0.0.1:12379
+    Key: relation.rpc
+
+ChatRpc:
+  Etcd:
+    Hosts:
+    - 127.0.0.1:12379
+    Key: chat.rpc
+  
+# SeaWeedFileSystem主机端口
+SeaweedFS:
+  Master: http://localhost:9333
+  Filers: ["http://localhost:8890"]
+  ChunkSize: 0   # 使用默认
+  Timeout: 30 # http连接超时

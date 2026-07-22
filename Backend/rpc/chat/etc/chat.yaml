@@ -1,0 +1,25 @@
+Name: chat.rpc
+ListenOn: 0.0.0.0:9003
+Etcd:
+  Hosts:
+  - 127.0.0.1:12379
+  Key: chat.rpc
+
+Verbose: true
+DB:
+  DataSource: "root:123456@tcp(127.0.0.1:3306)/gozero?charset=utf8mb4&parseTime=true&loc=Local"
+
+# 雪花ID机器编号，分布式部署每个实例配不同值
+Snowflake:
+  MachineID: 3
+
+RedisConf:
+  Host: 127.0.0.1:6379
+  Pass: ""
+  Type: node
+  Key:  "Chat"
+
+RabbitMQ:
+  DSN: amqp://guest:guest@127.0.0.1:5672/
+  Exchange: im.chat
+  VHost: "/"

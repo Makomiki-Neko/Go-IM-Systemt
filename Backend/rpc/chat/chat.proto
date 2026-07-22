@@ -1,0 +1,146 @@
+syntax = "proto3";
+
+package chat;
+
+option go_package = "./chat";
+
+
+// ---------- 通用消息结构 ----------
+/* 消息体
+message ChatMessage {
+    uint64 msg_id = 1;                 // 消息唯一ID
+    uint64 from_user_id = 2;           // 发送者ID
+    uint64 to_user_id = 3;             // 接收者ID
+    int32 msg_type = 4;                // 消息类型：1文本，2图片，3语音，4视频，5文件等
+    string content = 5;                // 消息内容（文本或文件URL等）
+    int64 send_time = 6; // 发送时间
+    int32 status = 7;                  // 消息状态：0已发送，1已送达，2已读
+}
+
+message GroupMessage {
+    uint64 msg_id = 1;                 // 消息唯一ID
+    uint64 from_user_id = 2;           // 发送者ID
+    uint64 group_id = 3;               // 群组ID
+    int32 msg_type = 4;                // 消息类型：1文本，2图片，3语音，4视频，5文件等
+    string content = 5;                // 消息内容（文本或文件URL等）
+    int64 send_time = 6; // 发送时间
+    int32 status = 7;                  // 消息状态：0已发送，1已送达，2已读
+}
+*/
+
+message CommonResponse {
+  int32 code = 1;                  // http
+  bytes data = 2;                 // 返回消息, 由GateWay进行封装推送
+}
+
+// 发送私聊消息
+message SendPrivateMessageReq {
+    uint64 from_user_id = 1;
+    uint64 to_user_id = 2;
+    int32 msg_type = 3;
+    string content = 4;
+    uint64 client_msg_id = 5;
+}
+
+// 发送群聊消息
+message SendGroupMessageReq {
+    uint64 from_user_id = 1;
+    uint64 group_id = 2;
+    int32 msg_type = 3;
+    string content = 4;
+    uint64 client_msg_id = 5;   // 客户端标识的唯一消息id， 用于防重发
+}
+
+// 发送群聊消息响应
+message SendMessageResp {
+    uint64 msg_id = 1;
+    int64 send_time = 2;
+    CommonResponse CommonResponse = 3;
+}
+
+// ---------- 拉取历史消息（接收消息） ----------
+// 拉取已读消息
+message GetChatHistoryMessagesReq {
+    uint64 user_id = 1;          // 当前用户ID（用于鉴权）
+    uint64 from_user_id = 2;        // 对方用户ID
+    uint64 start_msg_id = 4;     // 起始消息ID 逆序往上
+    int32 limit = 5;            // 每次拉取数量
+}
+
+message GetGroupHistoryMessagesReq {
+    uint64 user_id = 1;          // 当前用户ID（用于鉴权）判断是否组成员
+    uint64 group_id = 2;        // 群组ID
+    uint64 start_msg_id = 4;     // 起始消息ID
+    int32 limit = 5;            // 拉取数量
+}
+
+// 拉取未读消息
+message GetChatUnreadMessagesReq {
+    uint64 user_id = 1;          // 当前用户ID（用于鉴权）
+    uint64 from_user_id = 2;        // 对方用户ID
+    uint64 start_msg_id = 4;     // 起始消息ID，顺序往下
+    int32 limit = 5;            // 每次拉取数量
+}
+
+message GetGroupUnreadMessagesReq {
+    uint64 user_id = 1;          // 当前用户ID（用于鉴权）判断是否组成员
+    uint64 group_id = 2;        // 群组ID
+    uint64 start_msg_id = 4;     // 起始消息ID
+    int32 limit = 5;            // 拉取数量
+}
+
+// ---------- 获取新消息数量 ----------
+message GetChatNewMessagesNumberReq {
+    uint64 user_id = 1;          // 当前用户ID（用于鉴权）
+    //uint64 from_user_id = 2;        // 对方用户ID
+    //uint64 start_msg_id = 4;     // 起始消息ID，顺序往下
+}
+
+message GetGroupNewMessagesNumberReq {
+    uint64 user_id = 1;          // 当前用户ID（用于鉴权）
+    //uint64 group_id = 2;        // 对方用户ID
+    //uint64 start_msg_id = 4;     // 起始消息ID，顺序往下
+}
+
+message unread {
+    uint64 id = 1;
+    uint32 count = 2;
+}
+
+message GetMessageNumberResp {
+    uint32 code = 1;
+    uint32 total = 2;
+    repeated unread list = 3;
+} 
+
+message UpdateLastReadMsgRep {
+    uint64 user_id = 1;
+    uint64 target_id = 2;
+    uint64 msg_id = 3;
+}
+
+
+// ---------- 服务定义 ----------
+service ChatService {
+    // 发送私聊消息
+    rpc SendPrivateMessage(SendPrivateMessageReq) returns (SendMessageResp);
+
+    // 发送群聊消息
+    rpc SendGroupMessage(SendGroupMessageReq) returns (SendMessageResp);
+
+    // 拉取历史消息
+    rpc GetHistoryChatMessage (GetChatHistoryMessagesReq) returns (CommonResponse);
+    rpc GetHistoryGroupMessages(GetGroupHistoryMessagesReq) returns (CommonResponse);
+
+    // 拉取新消息
+    rpc GetUnreadChatMessage (GetChatUnreadMessagesReq) returns (CommonResponse);
+    rpc GetUnreadGroupMessages(GetGroupUnreadMessagesReq) returns (CommonResponse);
+
+    // 获取新消息数量
+    rpc GetNewChatMessageNumber (GetChatNewMessagesNumberReq) returns (GetMessageNumberResp);
+    rpc GetNewGroupMessageNumber (GetGroupNewMessagesNumberReq) returns (GetMessageNumberResp);
+
+    // 更新用户最后已读信息
+    rpc UpdateChatMsgLastRead (UpdateLastReadMsgRep) returns (CommonResponse);
+    rpc UpdataGroupMsgLastRead (UpdateLastReadMsgRep) returns (CommonResponse);
+}

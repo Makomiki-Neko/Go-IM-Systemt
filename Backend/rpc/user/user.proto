@@ -1,0 +1,112 @@
+syntax = "proto3";
+
+package user;
+
+// 修正：pb 文件直接输出到 pb 目录，Go 包名为 user
+option go_package = "./user";
+
+// 登录
+message LoginReq {
+  string account = 1;
+  string password = 2;
+  string device_id = 3;
+  string platform = 4;
+}
+
+message LoginResp {
+  int32 code = 1;
+  uint64 uid = 2;
+  string access_token = 3;
+  string refresh_token = 4;
+}
+
+// 注册
+message RegisterReq {
+  string account = 1;
+  string password = 2;
+  string email = 3;
+}
+
+message RegisterResp {
+  int32 code = 1;
+  string msg = 2;
+}
+
+
+// 心跳 access_token由Head里携带
+message HeartReq {
+  uint64 uid = 1;
+  string refresh_token = 2;
+  string device_id = 3;
+  string platform = 4;
+}
+
+message HeartResp {
+  int32 code = 1;
+}
+
+// 用户信息查询
+message UserInfoReq {
+  string account = 1;
+  uint64 uid = 2;
+}
+
+message UserInfoResp {
+  string name = 1;
+  string  photo = 2;
+	string  gender = 3;
+  string  signature = 4; 
+	int64 birthday = 5;   // Unix Time
+	int64 created_at = 6;
+  int64 last_online = 7;
+  bool online = 8;
+
+}
+
+// 用户信息更新
+message InfoUpdateReq {
+  uint64 uid = 1;
+  string  name = 2;
+  string  photo = 3;
+	string  gender = 4;
+	int64 birthday = 5;
+  string  signature = 6;
+}
+
+message InfoUpdateResp {
+	int32 code = 1;
+}
+
+// 修改邮箱
+message UpdateEmailReq {
+  string account = 1;
+  string email = 2;
+  string password = 3;
+}
+
+message UpdateEmailResp {
+  int32 code = 1;
+}
+
+// 修改密码
+message UpdatePasswordReq {
+  string account = 1;
+  string password = 3;
+}
+
+message UpdatePasswordResp {
+  int32 code = 1;
+}
+
+
+// 用户RPC服务
+service UserService {
+  rpc Login(LoginReq) returns (LoginResp);
+  rpc Register(RegisterReq) returns (RegisterResp);
+  rpc Heart (HeartReq) returns (HeartResp);
+
+  rpc GetUserInfo(UserInfoReq) returns (UserInfoResp);
+  rpc UpdateUserInfo(InfoUpdateReq) returns (InfoUpdateResp);
+  rpc UpdateEmail(UpdateEmailReq) returns (UpdateEmailResp);
+  rpc UpdatePassword(UpdatePasswordReq) returns (UpdatePasswordResp);
+}

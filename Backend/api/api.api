@@ -1,0 +1,293 @@
+// ========== 请求/响应结构体 ==========
+// 登录
+type LoginRequest {
+	Account  string `json:"account"`
+	Password string `json:"password"`
+	Platform string `json:"platform"`
+	DeviceId string `json:"device_id"`
+}
+
+type LoginResponse {
+	Code         int    `json:"code"`
+	Uid          uint64 `json:"uid,string"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	Msg          string `json:"message"`
+}
+
+// 注册
+type RegisterRequest {
+	Account  string `json:"account"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
+}
+
+type RegisterResponse {
+	Code int    `json:"code"`
+	Msg  string `json:"message"`
+}
+
+// 心跳
+type HeartRequest {
+	Uid          uint64 `json:"uid,string"`
+	RefreshToken string `json:"refresh_token"`
+	DeviceId     string `json:"device_id"`
+	Platform     string `json:"platform"`
+}
+
+type HeartResponse {
+	Code        int    `json:"code"`
+	AccessToken string `json:"access_token"`
+}
+
+// 用户信息请求
+type UserInfoRequest {
+	Account string `form:"account"`
+}
+
+type UserInfoResponse {
+	Name       string `json:"name"`
+	Photo      string `json:"photo"`
+	Gender     string `json:"gender"`
+	Signature  string `json:"signature"`
+	Birthday   int64  `json:"birthday"`
+	CreatedAt  int64  `json:"createdtime"`
+	LastOnline int64  `json:"lastonline"`
+	online     bool   `json:"online"`
+}
+
+// 更新用户信息
+type UpdateUserInfoRequest {
+	Name      string `json:"name"`
+	Photo     string `json:"photo"`
+	Gender    string `json:"gender"`
+	Birthday  int64  `json:"birthday"`
+	Signature string `json:"signature"`
+}
+
+type UpdateUserInfoResponse {
+	Code int `json:"code"`
+}
+
+// 更新头像
+// 不需要请求体，文件附加在form中，在handler里处理
+type UpdateAvatarResponse {
+	Code        int    `json:"code"`
+	PhotoFileID string `json:"photo_id"`
+}
+
+// 更新邮箱
+type UpdateEmailRequest {
+	Account string `json:"account"`
+	Email   string `json:"email"`
+}
+
+type UpdateEmailResponse {
+	Code int `json:"code"`
+}
+
+// 更新密码
+type UpdatePasswordRequest {
+	Account  string `json:"account"`
+	Password string `json:"password"`
+}
+
+type UpdatePasswordResponse {
+	Code int `json:"code"`
+}
+
+// ========== 公开接口组：无需JWT ==========
+@server (
+	prefix: /api/user
+)
+service User-api {
+	@handler Login
+	post /login (LoginRequest) returns (LoginResponse)
+
+	@handler Register
+	post /register (RegisterRequest) returns (RegisterResponse)
+
+	@handler Heart
+	post /heart (HeartRequest) returns (HeartResponse)
+}
+
+// ========== 鉴权接口组：必须携带有效JWT ==========
+@server (
+	prefix: /api/user
+	group:  user
+	jwt:    Auth // 开启JWT校验，JwtAuth对应配置文件中的配置节点名
+)
+service User-api {
+	@handler GetInfo
+	get /info (UserInfoRequest) returns (UserInfoResponse)
+
+	@handler UpdateInfo
+	post /update/info (UpdateUserInfoRequest) returns (UpdateUserInfoResponse)
+
+	@handler UpdateAvatar
+	post /update/avatar returns (UpdateAvatarResponse)
+
+	@handler UpdateEmail
+	post /update/email (UpdateEmailRequest) returns (UpdateEmailResponse)
+
+	@handler UpdatePassword
+	post /update/password (UpdatePasswordRequest) returns (UpdatePasswordResponse)
+}
+
+// Friend 相关
+// 通用基础结构体
+type CommonResp {
+	Code int32  `json:"code"` // 0成功，非0错误码
+	Msg  string `json:"msg"`
+}
+
+type PageReq {
+	Page int32 `form:"page,default=1"`
+	Size int32 `form:"size,default=20"`
+}
+
+type PageResp {
+	Total int32 `json:"total"`
+	Page  int32 `json:"page"`
+	Size  int32 `json:"size"`
+}
+
+// 好友信息结构体
+type FriendInfo {
+	Id          uint64 `json:"id,string"`
+	FriendName  string `json:"friend_name"`
+	Remark      string `json:"remark"`
+	Avatar      string `json:"avatar"`
+	Signature   string `json:"signature"`
+	Gender      string `json:"gender"`
+	Birthday    int64  `json:"birthday"`
+	LastOnline  int64  `json:"last_online"`
+	OnlineStatu bool   `json:"online_statu"`
+	Status      int32  `json:"status"`
+	CreatedAt   int64  `json:"created_at"`
+}
+
+// 1. 搜索用户
+type SearchUserReq {
+	SearchName string `form:"search_name"`
+	PageReq
+}
+
+type SearchUserResp {
+	CommonResp
+	List []FriendInfo `json:"list"`
+	PageResp
+}
+
+// 2. 发送好友申请
+type SendFriendReq {
+	FriendId uint64 `json:"friend_id,string"`
+	Msg      string `json:"msg"`
+}
+
+type SendFriendResp {
+	CommonResp
+	RequestId uint64 `json:"request_id,string"`
+}
+
+// 3. 处理好友申请 同意/拒绝
+type HandleFriendReq {
+	RequestId uint64 `json:"request_id,string"`
+	Accept    bool   `json:"accept"`
+	SenderId  uint64 `json:"sender_id,string"`
+	HandlerID uint64 `json:"user_id,string"`
+}
+
+// 4. 删除好友
+type DeleteFriendReq {
+	FriendId uint64 `json:"friend_id,string"`
+}
+
+// 5. 设置好友备注
+type SetRemarkReq {
+	FriendId uint64 `json:"friend_id,string"`
+	Remark   string `json:"remark"`
+}
+
+// 6. 获取已通过好友列表
+type GetFriendListReq {
+	PageReq
+}
+
+type GetFriendListResp {
+	CommonResp
+	List []FriendInfo `json:"list"`
+	PageResp
+}
+
+// 7. 获取待处理好友申请（别人加我）
+type GetFriendApplyReq {
+	PageReq
+}
+
+type GetFriendApplyResp {
+	CommonResp
+	List []FriendInfo `json:"list"`
+	PageResp
+}
+
+// 路由分组
+@server (
+	prefix: /api/friend
+	group:  friend
+	jwt:    Auth
+)
+service User-api {
+	// 搜索用户
+	@handler SearchFriend
+	post /search (SearchUserReq) returns (SearchUserResp)
+
+	// 发起好友申请
+	@handler FriendRequest
+	post /request (SendFriendReq) returns (SendFriendResp)
+
+	// 处理好友申请
+	@handler HandleFriendRequest
+	post /request_handle (HandleFriendReq) returns (CommonResp)
+
+	// 删除好友
+	@handler DeleteFriend
+	post /delete (DeleteFriendReq) returns (CommonResp)
+
+	// 修改好友备注
+	@handler SetFriendMark
+	post /remark (SetRemarkReq) returns (CommonResp)
+
+	// 获取我的好友列表
+	@handler GetFriendList
+	post /list (GetFriendListReq) returns (GetFriendListResp)
+
+	// 获取收到的好友申请列表
+	@handler GetFriendRequestList
+	post /apply_list (GetFriendApplyReq) returns (GetFriendApplyResp)
+}
+
+// ————————————Chat——————————
+type UnReadInfo {
+	Id    uint64 `json:"id,string"`
+	Count int    `json:"count"`
+}
+
+type GetUnreadNumberResp {
+	List []UnReadInfo `json:"list"`
+}
+
+@server (
+	prefix: /api/chat
+	group:  chat
+	jwt:    Auth
+)
+service User-api {
+	// 获取未读消息计数
+	@handler GetUnreadPrivateMsgNumber
+	get /GetUnreadPrivateMsgNumber returns (GetUnreadNumberResp)
+
+	@handler GetUnreadGroupMsgNumber
+	get /GetUnreadGroupMsgNumber returns (GetUnreadNumberResp)
+}
+

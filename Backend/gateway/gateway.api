@@ -1,0 +1,11 @@
+syntax = "v1"
+
+type WsRequest {
+	Token string `form:"token,optional"`
+}
+
+service gateway-api {
+	@handler WsGatewayHandler
+	get /ws (WsRequest)
+}
+

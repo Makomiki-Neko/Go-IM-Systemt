@@ -1,0 +1,310 @@
+syntax = "proto3";
+
+package relation;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "./relation";
+
+// ==================== 通用响应 ====================
+message CommonResponse {
+  int32 code = 1;                  // 0 成功，非0错误码
+  string msg = 2;                 // 返回消息
+}
+
+// ==================== 分页 ====================
+message PageRequest {
+  int32 page = 1;   // 页码，从1开始
+  int32 size = 2;   // 每页数量
+}
+
+message PageInfo {
+  int32 total = 1;
+  int32 page = 2;
+  int32 size = 3;
+}
+
+// ==================== 枚举定义 ====================
+enum FriendStatus {
+  FRIEND_STATUS_UNSPECIFIED = 0;  // 申请中
+  FRIEND_STATUS_ACCEPTED = 1;     // 已通过
+  FRIEND_STATUS_REJECTED = 2;     // 已拒绝
+  FRIEND_STATUS_BLOCKED = 3;      // 已删除
+}
+
+enum GroupMemberRole {
+  MEMBER_ROLE_UNSPECIFIED = 0;
+  MEMBER_ROLE_MEMBER = 1;         // 普通成员
+  MEMBER_ROLE_ADMIN = 2;          // 管理员
+  MEMBER_ROLE_OWNER = 3;          // 群主
+}
+
+enum GroupMemberStatus {
+  MEMBER_STATUS_UNSPECIFIED = 0;
+  MEMBER_STATUS_ACTIVE = 1;       // 已加入
+  MEMBER_STATUS_PENDING = 2;      // 申请中
+  MEMBER_STATUS_REJECTED = 3;     // 申请被拒
+  MEMBER_STATUS_KICKED = 4;       // 被移除
+  MEMBER_STATUS_LEFT = 5;         // 主动退出
+}
+
+// ==================== 好友相关消息 ====================
+message FriendInfo {
+  uint64 id = 1;                          // 记录ID
+  string friend_name = 2;                  // 好友名
+  string remark = 3;                     // 备注名
+  string avatar = 4;  // 头像
+  string signature = 5; // 签名
+  string gender = 6;  
+  int64 birthday = 7;  
+  int64 last_online = 8;  // 上次在线时间
+  bool online_statu = 9;  // 在线状态
+  FriendStatus status = 10;               // 状态
+  int64 created_at = 11; // 建立时间
+  
+  
+}
+
+// 搜索用户
+message SearchUserReq {
+  string search_name = 1;
+  PageRequest page = 2;
+}
+
+message SearchUserResp {
+  CommonResponse base = 1;
+  repeated FriendInfo list = 2;   // 搜索到的用户
+  PageInfo page = 3;
+}
+
+// 发送好友请求
+message SendFriendRequestReq {
+  uint64 user_id = 1;          // 发起方
+  uint64 friend_id = 2;        // 接收方
+  string msg = 3;          // 附言（可选）
+}
+
+message SendFriendRequestResp {
+  CommonResponse base = 1;
+  uint64 request_id = 2;       // 生成的好友记录ID
+}
+
+// 处理好友请求（同意/拒绝）
+message HandleFriendRequestReq {
+  uint64 request_id = 1;       // 好友记录ID
+  bool accept = 2;            // true同意，false拒绝
+  uint64 sender_id = 3;       // 发起者ID
+  uint64 handler_id = 4;      // 操作者ID（必须是被请求方）
+}
+
+message HandleFriendRequestResp {
+  CommonResponse base = 1;
+}
+
+// 删除好友
+message DeleteFriendReq {
+  uint64 user_id = 1;
+  uint64 friend_id = 2;
+}
+
+// 设置好友备注
+message SetFriendRemarkReq {
+  uint64 user_id = 1;
+  uint64 friend_id = 2;
+  string remark = 3;
+}
+
+// 获取好友列表（仅已通过）
+message GetFriendListReq {
+  uint64 user_id = 1;
+  PageRequest page = 2;
+}
+
+message GetFriendListResp {
+  CommonResponse base = 1;
+  repeated FriendInfo list = 2;
+  PageInfo page = 3;
+}
+
+// 获取好友请求列表（待处理的，即别人发给我的）
+message GetFriendRequestsReq {
+  uint64 user_id = 1;         // 当前用户，作为接收方
+  PageRequest page = 2;
+}
+
+message GetFriendRequestsResp {
+  CommonResponse base = 1;
+  repeated FriendInfo list = 2;   // status=PENDING的记录
+  PageInfo page = 3;
+}
+
+// ==================== 群组相关消息 ====================
+message GroupInfo {
+  uint64 group_id = 1;
+  string name = 2;
+  uint64 owner_id = 3;
+  string avatar = 4;
+  string notice = 5;
+  int32 member_count = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+}
+
+// 创建群组
+message CreateGroupReq {
+  string name = 1;
+  uint64 owner_id = 2;
+  string avatar = 3;
+  string notice = 4;
+}
+
+message CreateGroupResp {
+  CommonResponse base = 1;
+  uint64 group_id = 2;
+}
+
+// 更新群信息
+message UpdateGroupInfoReq {
+  uint64 group_id = 1;
+  uint64 operator_id = 2;    // 操作者，需为群主或管理员
+  string name = 3;           // 空则不更新
+  string avatar = 4;
+  string notice = 5;
+}
+
+// 解散群组
+message DismissGroupReq {
+  uint64 group_id = 1;
+  uint64 owner_id = 2;       // 仅群主可操作
+}
+
+// 获取群信息
+message GetGroupInfoReq {
+  uint64 group_id = 1;
+  uint64 viewer_id = 2;      // 查看者ID，用于权限校验（可选）
+}
+
+message GetGroupInfoResp {
+  CommonResponse base = 1;
+  GroupInfo info = 2;
+}
+
+// ==================== 群成员相关消息 ====================
+message GroupMember {
+  uint64 id = 1;                         // 记录ID
+  uint64 group_id = 2;
+  uint64 user_id = 3;
+  GroupMemberRole role = 4;
+  string group_nick = 5;                // 群昵称
+  GroupMemberStatus status = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+}
+
+// 申请加入群组
+message ApplyToJoinGroupReq {
+  uint64 group_id = 1;
+  uint64 user_id = 2;
+  string message = 3;         // 申请附言
+}
+
+// 处理群加入申请（同意/拒绝）
+message ProcessGroupJoinReq {
+  uint64 group_id = 1;
+  uint64 applicant_id = 2;    // 申请人ID
+  uint64 operator_id = 3;     // 群主或管理员
+  bool accept = 4;            // true同意，false拒绝
+}
+
+// 邀请加入群组（直接加入，无需申请）
+message InviteToGroupReq {
+  uint64 group_id = 1;
+  uint64 inviter_id = 2;      // 邀请人
+  repeated uint64 invitee_ids = 3; // 被邀请人列表
+}
+
+// 退出群组
+message QuitGroupReq {
+  uint64 group_id = 1;
+  uint64 user_id = 2;
+}
+
+// 移除群成员
+message RemoveGroupMemberReq {
+  uint64 group_id = 1;
+  uint64 operator_id = 2;     // 群主或管理员
+  uint64 target_id = 3;       // 被移除成员
+}
+
+// 设置群成员角色（设为管理员/取消管理员）
+message SetGroupMemberRoleReq {
+  uint64 group_id = 1;
+  uint64 operator_id = 2;     // 群主或管理员
+  uint64 target_id = 3;
+  GroupMemberRole new_role = 4; // 只能设为MEMBER或ADMIN（不能设为OWNER）
+}
+
+// 设置群昵称
+message SetGroupNickReq {
+  uint64 group_id = 1;
+  uint64 user_id = 2;
+  string group_nick = 3;
+}
+
+// 获取群成员列表（仅active状态）
+message GetGroupMembersReq {
+  uint64 group_id = 1;
+  PageRequest page = 2;
+}
+
+message GetGroupMembersResp {
+  CommonResponse base = 1;
+  repeated GroupMember list = 2;
+  PageInfo page = 3;
+}
+
+// 获取群加入申请列表（待处理的，即status=PENDING）
+message GetGroupJoinRequestsReq {
+  uint64 group_id = 1;
+  uint64 operator_id = 2;    // 群主或管理员
+  PageRequest page = 3;
+}
+
+message GetGroupJoinRequestsResp {
+  CommonResponse base = 1;
+  repeated GroupMember list = 2;  // 只返回PENDING状态的成员记录
+  PageInfo page = 3;
+}
+
+// ==================== 服务定义 ====================
+service FriendService {
+  // ----- 好友相关 -----
+  rpc SendFriendRequest(SendFriendRequestReq) returns (SendFriendRequestResp);
+  rpc HandleFriendRequest(HandleFriendRequestReq) returns (HandleFriendRequestResp);
+  rpc DeleteFriend(DeleteFriendReq) returns (CommonResponse);
+  rpc SetFriendRemark(SetFriendRemarkReq) returns (CommonResponse);
+  rpc GetFriendList(GetFriendListReq) returns (GetFriendListResp);
+  rpc GetFriendRequests(GetFriendRequestsReq) returns (GetFriendRequestsResp);
+  rpc SearchUser(SearchUserReq) returns (SearchUserResp);
+}
+
+service GroupService {
+  // ----- 群组管理 -----
+  rpc CreateGroup(CreateGroupReq) returns (CreateGroupResp);
+  rpc UpdateGroupInfo(UpdateGroupInfoReq) returns (CommonResponse);
+  rpc DismissGroup(DismissGroupReq) returns (CommonResponse);
+  rpc GetGroupInfo(GetGroupInfoReq) returns (GetGroupInfoResp);
+}
+
+service GroupMemberService {
+  // ----- 群成员管理 -----
+  rpc ApplyToJoinGroup(ApplyToJoinGroupReq) returns (CommonResponse);
+  rpc ProcessGroupJoin(ProcessGroupJoinReq) returns (CommonResponse);
+  rpc InviteToGroup(InviteToGroupReq) returns (CommonResponse);
+  rpc QuitGroup(QuitGroupReq) returns (CommonResponse);
+  rpc RemoveGroupMember(RemoveGroupMemberReq) returns (CommonResponse);
+  rpc SetGroupMemberRole(SetGroupMemberRoleReq) returns (CommonResponse);
+  rpc SetGroupNick(SetGroupNickReq) returns (CommonResponse);
+  rpc GetGroupMembers(GetGroupMembersReq) returns (GetGroupMembersResp);
+  rpc GetGroupJoinRequests(GetGroupJoinRequestsReq) returns (GetGroupJoinRequestsResp);
+}

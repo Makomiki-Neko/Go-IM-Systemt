@@ -1,0 +1,19 @@
+Name: user.rpc
+ListenOn: 0.0.0.0:9001
+Verbose: true
+Etcd:
+  Hosts:
+  - 127.0.0.1:12379
+  Key: user.rpc
+DB:
+  DataSource: "root:123456@tcp(127.0.0.1:3306)/gozero?charset=utf8mb4&parseTime=true&loc=Local"
+
+# 雪花ID机器编号，分布式部署每个实例配不同值
+Snowflake:
+  MachineID: 1
+
+RedisConf:
+  Host: 127.0.0.1:6379
+  Pass: ""
+  Type: node
+  Key:  "User"
