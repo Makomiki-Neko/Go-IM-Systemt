@@ -1,0 +1,113 @@
+syntax = "proto3";
+
+package ai;
+
+option go_package = "./ai";
+
+
+// ---------- 通用消息结构 ----------
+/* 消息体
+message ChatMessage {
+    uint64 msg_id = 1;                 // 消息唯一ID
+    uint64 from_user_id = 2;           // 发送者ID
+    uint64 to_user_id = 3;             // 接收者ID
+    int32 msg_type = 4;                // 消息类型：1文本，2图片，3语音，4视频，5文件等
+    string content = 5;                // 消息内容（文本或文件URL等）
+    int64 send_time = 6; // 发送时间
+    int32 status = 7;                  // 消息状态：0已发送，1已送达，2已读
+}
+
+message GroupMessage {
+    uint64 msg_id = 1;                 // 消息唯一ID
+    uint64 from_user_id = 2;           // 发送者ID
+    uint64 group_id = 3;               // 群组ID
+    int32 msg_type = 4;                // 消息类型：1文本，2图片，3语音，4视频，5文件等
+    string content = 5;                // 消息内容（文本或文件URL等）
+    int64 send_time = 6; // 发送时间
+    int32 status = 7;                  // 消息状态：0已发送，1已送达，2已读
+}
+*/
+
+message CommonResponse {
+  int32 code = 1;                  // http
+  bytes data = 2;                 // 返回消息, 由GateWay进行封装推送
+}
+
+message SetAgentInfoReq{
+    uint64 user_id = 1;
+    string agent_name = 2;
+    string agent_prompt = 3;
+    string agent_avatar = 4;
+}
+
+message GetAgentInfoReq{
+    uint64 user_id = 1;
+}
+
+message GetAgentInfoResp{
+    uint64 user_id = 1;
+    string agent_name = 2;
+    string agent_prompt = 3;
+    string agent_avatar = 4;
+}
+
+// 发送消息
+message SendMessageToAiReq {
+    uint64 from_user_id = 1;
+    int32 msg_type = 2;
+    string content = 3;
+    uint64 client_msg_id = 4;
+}
+
+// 发送消息响应
+message SendMessageResp {
+    uint64 msg_id = 1;
+    int64 send_time = 2;
+    CommonResponse CommonResponse = 3;
+}
+
+// ---------- 拉取历史对话（接收消息） ----------
+// 拉取已读消息
+message GetChatHistoryMessagesFromAIReq {
+    uint64 user_id = 1;          // 当前用户ID（用于鉴权）
+    uint64 start_msg_id = 4;     // 起始消息ID 逆序往上
+    int32 limit = 5;            // 每次拉取数量
+}
+
+// 拉取未读消息
+message GetChatUnreadMessagesFromAIReq {
+    uint64 user_id = 1;          // 当前用户ID（用于鉴权）
+    uint64 start_msg_id = 4;     // 起始消息ID，顺序往下
+    int32 limit = 5;            // 每次拉取数量
+}
+
+
+message UpdateLastReadMsgRep {
+    uint64 user_id = 1;
+    uint64 target_id = 2;
+    uint64 msg_id = 3;
+}
+
+
+// ---------- 服务定义 ----------
+service ChatService {
+    // 自定义智能体
+    rpc SetAgentInfo(SetAgentInfoReq) returns (CommonResponse);
+    
+    // 获取智能体信息
+    rpc GetAgentInfo(GetAgentInfoReq) returns (GetAgentInfoResp);
+
+    // 发送私聊消息
+    rpc SendPrivateMessage(SendMessageToAiReq) returns (SendMessageResp);
+
+    // 拉取历史消息, WS推送
+    rpc GetHistoryAiMessage (GetChatHistoryMessagesFromAIReq) returns (CommonResponse);
+
+    // 拉取新消息，WS推送
+    rpc GetUnreadAiMessage (GetChatUnreadMessagesFromAIReq) returns (CommonResponse);
+
+    // 更新用户最后已读信息
+    rpc UpdateAiMsgLastRead (UpdateLastReadMsgRep) returns (CommonResponse);
+
+
+}
