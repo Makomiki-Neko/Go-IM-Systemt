@@ -1,9 +1,9 @@
 # Go-IM-Systemt
 基于 GoZero 微服务架构构建的分布式即时通讯(IM)系统，集成 LLM 接入能力，同时支持基础即时通讯业务与智能化对话场景。
 
-![登录](./pic/login.jpg)
-![好友](./pic/friend.jpg)
-![会话](./pic/chat.jpg)
+![登录](./login.jpg)
+![好友](./friend.jpg)
+![会话](./chat.jpg)
 
 ## 项目简介
 本项目采用 **Gateway / API / RPC** 三层微服务架构搭建分布式 IM 系统，完整实现即时通讯核心业务，同时接入大模型能力，提供 AI 智能体对话、群聊消息总结、群机器人等扩展功能。
