@@ -4,3 +4,8 @@ Etcd:
   Hosts:
   - 127.0.0.1:2379
   Key: ai.rpc
+
+OpenAI:
+  Api: localhost:11434/v1
+  Key: None
+  ModelName: Gemma4:e4b
