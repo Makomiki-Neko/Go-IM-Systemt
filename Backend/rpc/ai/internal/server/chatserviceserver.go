@@ -35,10 +35,16 @@ func (s *ChatServiceServer) GetAgentInfo(ctx context.Context, in *ai.GetAgentInf
 	return l.GetAgentInfo(in)
 }
 
-// 发送私聊消息
-func (s *ChatServiceServer) SendPrivateMessage(ctx context.Context, in *ai.SendMessageToAiReq) (*ai.SendMessageResp, error) {
-	l := logic.NewSendPrivateMessageLogic(ctx, s.svcCtx)
-	return l.SendPrivateMessage(in)
+// 拉取会话列表
+func (s *ChatServiceServer) GetSessionList(ctx context.Context, in *ai.GetSessionListReq) (*ai.GetSessionListResp, error) {
+	l := logic.NewGetSessionListLogic(ctx, s.svcCtx)
+	return l.GetSessionList(in)
+}
+
+// 发送消息给LLM
+func (s *ChatServiceServer) SendLLMMessage(ctx context.Context, in *ai.SendMessageToAiReq) (*ai.SendMessageResp, error) {
+	l := logic.NewSendLLMMessageLogic(ctx, s.svcCtx)
+	return l.SendLLMMessage(in)
 }
 
 // 拉取历史消息, WS推送

@@ -61,8 +61,6 @@ message FriendInfo {
   bool online_statu = 9;  // 在线状态
   FriendStatus status = 10;               // 状态
   int64 created_at = 11; // 建立时间
-  
-  
 }
 
 // 搜索用户

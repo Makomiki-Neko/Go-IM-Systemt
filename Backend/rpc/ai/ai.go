@@ -34,6 +34,8 @@ func main() {
 	})
 	defer s.Stop()
 
+	// 启动消费者进程
+
 	fmt.Printf("Starting rpc server at %s...\n", c.ListenOn)
 	s.Start()
 }

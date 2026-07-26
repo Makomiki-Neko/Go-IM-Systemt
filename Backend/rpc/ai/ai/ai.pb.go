@@ -21,10 +21,12 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// ---------- 通用消息结构 ----------
 type CommonResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Code          int32                  `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"` // http
-	Data          []byte                 `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`  // 返回消息, 由GateWay进行封装推送
+	Code          int32                  `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"` // 0 成功，非0错误码
+	Msg           string                 `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`    // 返回消息
+	Data          []byte                 `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -66,6 +68,13 @@ func (x *CommonResponse) GetCode() int32 {
 	return 0
 }
 
+func (x *CommonResponse) GetMsg() string {
+	if x != nil {
+		return x.Msg
+	}
+	return ""
+}
+
 func (x *CommonResponse) GetData() []byte {
 	if x != nil {
 		return x.Data
@@ -73,19 +82,133 @@ func (x *CommonResponse) GetData() []byte {
 	return nil
 }
 
+// ==================== 分页 ====================
+type PageRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Page          int32                  `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"` // 页码，从1开始
+	Size          int32                  `protobuf:"varint,2,opt,name=size,proto3" json:"size,omitempty"` // 每页数量
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PageRequest) Reset() {
+	*x = PageRequest{}
+	mi := &file_ai_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PageRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PageRequest) ProtoMessage() {}
+
+func (x *PageRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_ai_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PageRequest.ProtoReflect.Descriptor instead.
+func (*PageRequest) Descriptor() ([]byte, []int) {
+	return file_ai_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *PageRequest) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *PageRequest) GetSize() int32 {
+	if x != nil {
+		return x.Size
+	}
+	return 0
+}
+
+type PageInfo struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Total         int32                  `protobuf:"varint,1,opt,name=total,proto3" json:"total,omitempty"`
+	Page          int32                  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
+	Size          int32                  `protobuf:"varint,3,opt,name=size,proto3" json:"size,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PageInfo) Reset() {
+	*x = PageInfo{}
+	mi := &file_ai_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PageInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PageInfo) ProtoMessage() {}
+
+func (x *PageInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_ai_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PageInfo.ProtoReflect.Descriptor instead.
+func (*PageInfo) Descriptor() ([]byte, []int) {
+	return file_ai_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *PageInfo) GetTotal() int32 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+func (x *PageInfo) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *PageInfo) GetSize() int32 {
+	if x != nil {
+		return x.Size
+	}
+	return 0
+}
+
 type SetAgentInfoReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        uint64                 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	AgentName     string                 `protobuf:"bytes,2,opt,name=agent_name,json=agentName,proto3" json:"agent_name,omitempty"`
-	AgentPrompt   string                 `protobuf:"bytes,3,opt,name=agent_prompt,json=agentPrompt,proto3" json:"agent_prompt,omitempty"`
-	AgentAvatar   string                 `protobuf:"bytes,4,opt,name=agent_avatar,json=agentAvatar,proto3" json:"agent_avatar,omitempty"`
+	AgentId       uint64                 `protobuf:"varint,2,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
+	AgentName     string                 `protobuf:"bytes,3,opt,name=agent_name,json=agentName,proto3" json:"agent_name,omitempty"`
+	AgentPrompt   string                 `protobuf:"bytes,4,opt,name=agent_prompt,json=agentPrompt,proto3" json:"agent_prompt,omitempty"`
+	AgentAvatar   string                 `protobuf:"bytes,5,opt,name=agent_avatar,json=agentAvatar,proto3" json:"agent_avatar,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *SetAgentInfoReq) Reset() {
 	*x = SetAgentInfoReq{}
-	mi := &file_ai_proto_msgTypes[1]
+	mi := &file_ai_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -97,7 +220,7 @@ func (x *SetAgentInfoReq) String() string {
 func (*SetAgentInfoReq) ProtoMessage() {}
 
 func (x *SetAgentInfoReq) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_proto_msgTypes[1]
+	mi := &file_ai_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -110,12 +233,19 @@ func (x *SetAgentInfoReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetAgentInfoReq.ProtoReflect.Descriptor instead.
 func (*SetAgentInfoReq) Descriptor() ([]byte, []int) {
-	return file_ai_proto_rawDescGZIP(), []int{1}
+	return file_ai_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *SetAgentInfoReq) GetUserId() uint64 {
 	if x != nil {
 		return x.UserId
+	}
+	return 0
+}
+
+func (x *SetAgentInfoReq) GetAgentId() uint64 {
+	if x != nil {
+		return x.AgentId
 	}
 	return 0
 }
@@ -144,13 +274,14 @@ func (x *SetAgentInfoReq) GetAgentAvatar() string {
 type GetAgentInfoReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        uint64                 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	SessionId     uint64                 `protobuf:"varint,2,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetAgentInfoReq) Reset() {
 	*x = GetAgentInfoReq{}
-	mi := &file_ai_proto_msgTypes[2]
+	mi := &file_ai_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -162,7 +293,7 @@ func (x *GetAgentInfoReq) String() string {
 func (*GetAgentInfoReq) ProtoMessage() {}
 
 func (x *GetAgentInfoReq) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_proto_msgTypes[2]
+	mi := &file_ai_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -175,7 +306,7 @@ func (x *GetAgentInfoReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAgentInfoReq.ProtoReflect.Descriptor instead.
 func (*GetAgentInfoReq) Descriptor() ([]byte, []int) {
-	return file_ai_proto_rawDescGZIP(), []int{2}
+	return file_ai_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *GetAgentInfoReq) GetUserId() uint64 {
@@ -185,9 +316,16 @@ func (x *GetAgentInfoReq) GetUserId() uint64 {
 	return 0
 }
 
+func (x *GetAgentInfoReq) GetSessionId() uint64 {
+	if x != nil {
+		return x.SessionId
+	}
+	return 0
+}
+
 type GetAgentInfoResp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        uint64                 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	AgentId       uint64                 `protobuf:"varint,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
 	AgentName     string                 `protobuf:"bytes,2,opt,name=agent_name,json=agentName,proto3" json:"agent_name,omitempty"`
 	AgentPrompt   string                 `protobuf:"bytes,3,opt,name=agent_prompt,json=agentPrompt,proto3" json:"agent_prompt,omitempty"`
 	AgentAvatar   string                 `protobuf:"bytes,4,opt,name=agent_avatar,json=agentAvatar,proto3" json:"agent_avatar,omitempty"`
@@ -197,7 +335,7 @@ type GetAgentInfoResp struct {
 
 func (x *GetAgentInfoResp) Reset() {
 	*x = GetAgentInfoResp{}
-	mi := &file_ai_proto_msgTypes[3]
+	mi := &file_ai_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -209,7 +347,7 @@ func (x *GetAgentInfoResp) String() string {
 func (*GetAgentInfoResp) ProtoMessage() {}
 
 func (x *GetAgentInfoResp) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_proto_msgTypes[3]
+	mi := &file_ai_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -222,12 +360,12 @@ func (x *GetAgentInfoResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAgentInfoResp.ProtoReflect.Descriptor instead.
 func (*GetAgentInfoResp) Descriptor() ([]byte, []int) {
-	return file_ai_proto_rawDescGZIP(), []int{3}
+	return file_ai_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *GetAgentInfoResp) GetUserId() uint64 {
+func (x *GetAgentInfoResp) GetAgentId() uint64 {
 	if x != nil {
-		return x.UserId
+		return x.AgentId
 	}
 	return 0
 }
@@ -253,20 +391,202 @@ func (x *GetAgentInfoResp) GetAgentAvatar() string {
 	return ""
 }
 
+// 拉取会话列表
+type GetSessionListReq struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        uint64                 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Page          *PageRequest           `protobuf:"bytes,2,opt,name=page,proto3" json:"page,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetSessionListReq) Reset() {
+	*x = GetSessionListReq{}
+	mi := &file_ai_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetSessionListReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetSessionListReq) ProtoMessage() {}
+
+func (x *GetSessionListReq) ProtoReflect() protoreflect.Message {
+	mi := &file_ai_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetSessionListReq.ProtoReflect.Descriptor instead.
+func (*GetSessionListReq) Descriptor() ([]byte, []int) {
+	return file_ai_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *GetSessionListReq) GetUserId() uint64 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
+}
+
+func (x *GetSessionListReq) GetPage() *PageRequest {
+	if x != nil {
+		return x.Page
+	}
+	return nil
+}
+
+type SessionInfo struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     uint64                 `protobuf:"varint,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	AgentSet      uint64                 `protobuf:"varint,2,opt,name=agent_set,json=agentSet,proto3" json:"agent_set,omitempty"`
+	Tokens        int64                  `protobuf:"varint,3,opt,name=tokens,proto3" json:"tokens,omitempty"`
+	LastMsg       uint64                 `protobuf:"varint,4,opt,name=last_msg,json=lastMsg,proto3" json:"last_msg,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SessionInfo) Reset() {
+	*x = SessionInfo{}
+	mi := &file_ai_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SessionInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SessionInfo) ProtoMessage() {}
+
+func (x *SessionInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_ai_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SessionInfo.ProtoReflect.Descriptor instead.
+func (*SessionInfo) Descriptor() ([]byte, []int) {
+	return file_ai_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *SessionInfo) GetSessionId() uint64 {
+	if x != nil {
+		return x.SessionId
+	}
+	return 0
+}
+
+func (x *SessionInfo) GetAgentSet() uint64 {
+	if x != nil {
+		return x.AgentSet
+	}
+	return 0
+}
+
+func (x *SessionInfo) GetTokens() int64 {
+	if x != nil {
+		return x.Tokens
+	}
+	return 0
+}
+
+func (x *SessionInfo) GetLastMsg() uint64 {
+	if x != nil {
+		return x.LastMsg
+	}
+	return 0
+}
+
+type GetSessionListResp struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Base          *CommonResponse        `protobuf:"bytes,1,opt,name=base,proto3" json:"base,omitempty"`
+	List          []*SessionInfo         `protobuf:"bytes,2,rep,name=list,proto3" json:"list,omitempty"` // 搜索到的会话列表记录
+	Page          *PageInfo              `protobuf:"bytes,3,opt,name=page,proto3" json:"page,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetSessionListResp) Reset() {
+	*x = GetSessionListResp{}
+	mi := &file_ai_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetSessionListResp) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetSessionListResp) ProtoMessage() {}
+
+func (x *GetSessionListResp) ProtoReflect() protoreflect.Message {
+	mi := &file_ai_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetSessionListResp.ProtoReflect.Descriptor instead.
+func (*GetSessionListResp) Descriptor() ([]byte, []int) {
+	return file_ai_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *GetSessionListResp) GetBase() *CommonResponse {
+	if x != nil {
+		return x.Base
+	}
+	return nil
+}
+
+func (x *GetSessionListResp) GetList() []*SessionInfo {
+	if x != nil {
+		return x.List
+	}
+	return nil
+}
+
+func (x *GetSessionListResp) GetPage() *PageInfo {
+	if x != nil {
+		return x.Page
+	}
+	return nil
+}
+
 // 发送消息
 type SendMessageToAiReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	FromUserId    uint64                 `protobuf:"varint,1,opt,name=from_user_id,json=fromUserId,proto3" json:"from_user_id,omitempty"`
-	MsgType       int32                  `protobuf:"varint,2,opt,name=msg_type,json=msgType,proto3" json:"msg_type,omitempty"`
-	Content       string                 `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`
-	ClientMsgId   uint64                 `protobuf:"varint,4,opt,name=client_msg_id,json=clientMsgId,proto3" json:"client_msg_id,omitempty"`
+	UserId        uint64                 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	SessionId     uint64                 `protobuf:"varint,2,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	MsgType       int32                  `protobuf:"varint,3,opt,name=msg_type,json=msgType,proto3" json:"msg_type,omitempty"`
+	Content       string                 `protobuf:"bytes,4,opt,name=content,proto3" json:"content,omitempty"`
+	ClientMsgId   uint64                 `protobuf:"varint,5,opt,name=client_msg_id,json=clientMsgId,proto3" json:"client_msg_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *SendMessageToAiReq) Reset() {
 	*x = SendMessageToAiReq{}
-	mi := &file_ai_proto_msgTypes[4]
+	mi := &file_ai_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -278,7 +598,7 @@ func (x *SendMessageToAiReq) String() string {
 func (*SendMessageToAiReq) ProtoMessage() {}
 
 func (x *SendMessageToAiReq) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_proto_msgTypes[4]
+	mi := &file_ai_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -291,12 +611,19 @@ func (x *SendMessageToAiReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendMessageToAiReq.ProtoReflect.Descriptor instead.
 func (*SendMessageToAiReq) Descriptor() ([]byte, []int) {
-	return file_ai_proto_rawDescGZIP(), []int{4}
+	return file_ai_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *SendMessageToAiReq) GetFromUserId() uint64 {
+func (x *SendMessageToAiReq) GetUserId() uint64 {
 	if x != nil {
-		return x.FromUserId
+		return x.UserId
+	}
+	return 0
+}
+
+func (x *SendMessageToAiReq) GetSessionId() uint64 {
+	if x != nil {
+		return x.SessionId
 	}
 	return 0
 }
@@ -334,7 +661,7 @@ type SendMessageResp struct {
 
 func (x *SendMessageResp) Reset() {
 	*x = SendMessageResp{}
-	mi := &file_ai_proto_msgTypes[5]
+	mi := &file_ai_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -346,7 +673,7 @@ func (x *SendMessageResp) String() string {
 func (*SendMessageResp) ProtoMessage() {}
 
 func (x *SendMessageResp) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_proto_msgTypes[5]
+	mi := &file_ai_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -359,7 +686,7 @@ func (x *SendMessageResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendMessageResp.ProtoReflect.Descriptor instead.
 func (*SendMessageResp) Descriptor() ([]byte, []int) {
-	return file_ai_proto_rawDescGZIP(), []int{5}
+	return file_ai_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *SendMessageResp) GetMsgId() uint64 {
@@ -387,7 +714,8 @@ func (x *SendMessageResp) GetCommonResponse() *CommonResponse {
 // 拉取已读消息
 type GetChatHistoryMessagesFromAIReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        uint64                 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`               // 当前用户ID（用于鉴权）
+	UserId        uint64                 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // 当前用户ID（用于鉴权）
+	SessionId     uint64                 `protobuf:"varint,2,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	StartMsgId    uint64                 `protobuf:"varint,4,opt,name=start_msg_id,json=startMsgId,proto3" json:"start_msg_id,omitempty"` // 起始消息ID 逆序往上
 	Limit         int32                  `protobuf:"varint,5,opt,name=limit,proto3" json:"limit,omitempty"`                               // 每次拉取数量
 	unknownFields protoimpl.UnknownFields
@@ -396,7 +724,7 @@ type GetChatHistoryMessagesFromAIReq struct {
 
 func (x *GetChatHistoryMessagesFromAIReq) Reset() {
 	*x = GetChatHistoryMessagesFromAIReq{}
-	mi := &file_ai_proto_msgTypes[6]
+	mi := &file_ai_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -408,7 +736,7 @@ func (x *GetChatHistoryMessagesFromAIReq) String() string {
 func (*GetChatHistoryMessagesFromAIReq) ProtoMessage() {}
 
 func (x *GetChatHistoryMessagesFromAIReq) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_proto_msgTypes[6]
+	mi := &file_ai_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -421,12 +749,19 @@ func (x *GetChatHistoryMessagesFromAIReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetChatHistoryMessagesFromAIReq.ProtoReflect.Descriptor instead.
 func (*GetChatHistoryMessagesFromAIReq) Descriptor() ([]byte, []int) {
-	return file_ai_proto_rawDescGZIP(), []int{6}
+	return file_ai_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GetChatHistoryMessagesFromAIReq) GetUserId() uint64 {
 	if x != nil {
 		return x.UserId
+	}
+	return 0
+}
+
+func (x *GetChatHistoryMessagesFromAIReq) GetSessionId() uint64 {
+	if x != nil {
+		return x.SessionId
 	}
 	return 0
 }
@@ -448,7 +783,8 @@ func (x *GetChatHistoryMessagesFromAIReq) GetLimit() int32 {
 // 拉取未读消息
 type GetChatUnreadMessagesFromAIReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        uint64                 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`               // 当前用户ID（用于鉴权）
+	UserId        uint64                 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // 当前用户ID（用于鉴权）
+	SessionId     uint64                 `protobuf:"varint,2,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	StartMsgId    uint64                 `protobuf:"varint,4,opt,name=start_msg_id,json=startMsgId,proto3" json:"start_msg_id,omitempty"` // 起始消息ID，顺序往下
 	Limit         int32                  `protobuf:"varint,5,opt,name=limit,proto3" json:"limit,omitempty"`                               // 每次拉取数量
 	unknownFields protoimpl.UnknownFields
@@ -457,7 +793,7 @@ type GetChatUnreadMessagesFromAIReq struct {
 
 func (x *GetChatUnreadMessagesFromAIReq) Reset() {
 	*x = GetChatUnreadMessagesFromAIReq{}
-	mi := &file_ai_proto_msgTypes[7]
+	mi := &file_ai_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -469,7 +805,7 @@ func (x *GetChatUnreadMessagesFromAIReq) String() string {
 func (*GetChatUnreadMessagesFromAIReq) ProtoMessage() {}
 
 func (x *GetChatUnreadMessagesFromAIReq) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_proto_msgTypes[7]
+	mi := &file_ai_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -482,12 +818,19 @@ func (x *GetChatUnreadMessagesFromAIReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetChatUnreadMessagesFromAIReq.ProtoReflect.Descriptor instead.
 func (*GetChatUnreadMessagesFromAIReq) Descriptor() ([]byte, []int) {
-	return file_ai_proto_rawDescGZIP(), []int{7}
+	return file_ai_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GetChatUnreadMessagesFromAIReq) GetUserId() uint64 {
 	if x != nil {
 		return x.UserId
+	}
+	return 0
+}
+
+func (x *GetChatUnreadMessagesFromAIReq) GetSessionId() uint64 {
+	if x != nil {
+		return x.SessionId
 	}
 	return 0
 }
@@ -509,7 +852,7 @@ func (x *GetChatUnreadMessagesFromAIReq) GetLimit() int32 {
 type UpdateLastReadMsgRep struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        uint64                 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	TargetId      uint64                 `protobuf:"varint,2,opt,name=target_id,json=targetId,proto3" json:"target_id,omitempty"`
+	SessionId     uint64                 `protobuf:"varint,2,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	MsgId         uint64                 `protobuf:"varint,3,opt,name=msg_id,json=msgId,proto3" json:"msg_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -517,7 +860,7 @@ type UpdateLastReadMsgRep struct {
 
 func (x *UpdateLastReadMsgRep) Reset() {
 	*x = UpdateLastReadMsgRep{}
-	mi := &file_ai_proto_msgTypes[8]
+	mi := &file_ai_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -529,7 +872,7 @@ func (x *UpdateLastReadMsgRep) String() string {
 func (*UpdateLastReadMsgRep) ProtoMessage() {}
 
 func (x *UpdateLastReadMsgRep) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_proto_msgTypes[8]
+	mi := &file_ai_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -542,7 +885,7 @@ func (x *UpdateLastReadMsgRep) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateLastReadMsgRep.ProtoReflect.Descriptor instead.
 func (*UpdateLastReadMsgRep) Descriptor() ([]byte, []int) {
-	return file_ai_proto_rawDescGZIP(), []int{8}
+	return file_ai_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *UpdateLastReadMsgRep) GetUserId() uint64 {
@@ -552,9 +895,9 @@ func (x *UpdateLastReadMsgRep) GetUserId() uint64 {
 	return 0
 }
 
-func (x *UpdateLastReadMsgRep) GetTargetId() uint64 {
+func (x *UpdateLastReadMsgRep) GetSessionId() uint64 {
 	if x != nil {
-		return x.TargetId
+		return x.SessionId
 	}
 	return 0
 }
@@ -570,52 +913,83 @@ var File_ai_proto protoreflect.FileDescriptor
 
 const file_ai_proto_rawDesc = "" +
 	"\n" +
-	"\bai.proto\x12\x02ai\"8\n" +
+	"\bai.proto\x12\x02ai\"J\n" +
 	"\x0eCommonResponse\x12\x12\n" +
-	"\x04code\x18\x01 \x01(\x05R\x04code\x12\x12\n" +
-	"\x04data\x18\x02 \x01(\fR\x04data\"\x8f\x01\n" +
+	"\x04code\x18\x01 \x01(\x05R\x04code\x12\x10\n" +
+	"\x03msg\x18\x02 \x01(\tR\x03msg\x12\x12\n" +
+	"\x04data\x18\x03 \x01(\fR\x04data\"5\n" +
+	"\vPageRequest\x12\x12\n" +
+	"\x04page\x18\x01 \x01(\x05R\x04page\x12\x12\n" +
+	"\x04size\x18\x02 \x01(\x05R\x04size\"H\n" +
+	"\bPageInfo\x12\x14\n" +
+	"\x05total\x18\x01 \x01(\x05R\x05total\x12\x12\n" +
+	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x12\n" +
+	"\x04size\x18\x03 \x01(\x05R\x04size\"\xaa\x01\n" +
 	"\x0fSetAgentInfoReq\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x04R\x06userId\x12\x1d\n" +
+	"\auser_id\x18\x01 \x01(\x04R\x06userId\x12\x19\n" +
+	"\bagent_id\x18\x02 \x01(\x04R\aagentId\x12\x1d\n" +
 	"\n" +
-	"agent_name\x18\x02 \x01(\tR\tagentName\x12!\n" +
-	"\fagent_prompt\x18\x03 \x01(\tR\vagentPrompt\x12!\n" +
-	"\fagent_avatar\x18\x04 \x01(\tR\vagentAvatar\"*\n" +
+	"agent_name\x18\x03 \x01(\tR\tagentName\x12!\n" +
+	"\fagent_prompt\x18\x04 \x01(\tR\vagentPrompt\x12!\n" +
+	"\fagent_avatar\x18\x05 \x01(\tR\vagentAvatar\"I\n" +
 	"\x0fGetAgentInfoReq\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x04R\x06userId\"\x90\x01\n" +
-	"\x10GetAgentInfoResp\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x04R\x06userId\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x02 \x01(\x04R\tsessionId\"\x92\x01\n" +
+	"\x10GetAgentInfoResp\x12\x19\n" +
+	"\bagent_id\x18\x01 \x01(\x04R\aagentId\x12\x1d\n" +
 	"\n" +
 	"agent_name\x18\x02 \x01(\tR\tagentName\x12!\n" +
 	"\fagent_prompt\x18\x03 \x01(\tR\vagentPrompt\x12!\n" +
-	"\fagent_avatar\x18\x04 \x01(\tR\vagentAvatar\"\x8f\x01\n" +
-	"\x12SendMessageToAiReq\x12 \n" +
-	"\ffrom_user_id\x18\x01 \x01(\x04R\n" +
-	"fromUserId\x12\x19\n" +
-	"\bmsg_type\x18\x02 \x01(\x05R\amsgType\x12\x18\n" +
-	"\acontent\x18\x03 \x01(\tR\acontent\x12\"\n" +
-	"\rclient_msg_id\x18\x04 \x01(\x04R\vclientMsgId\"\x81\x01\n" +
+	"\fagent_avatar\x18\x04 \x01(\tR\vagentAvatar\"Q\n" +
+	"\x11GetSessionListReq\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\x04R\x06userId\x12#\n" +
+	"\x04page\x18\x02 \x01(\v2\x0f.ai.PageRequestR\x04page\"|\n" +
+	"\vSessionInfo\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\x04R\tsessionId\x12\x1b\n" +
+	"\tagent_set\x18\x02 \x01(\x04R\bagentSet\x12\x16\n" +
+	"\x06tokens\x18\x03 \x01(\x03R\x06tokens\x12\x19\n" +
+	"\blast_msg\x18\x04 \x01(\x04R\alastMsg\"\x83\x01\n" +
+	"\x12GetSessionListResp\x12&\n" +
+	"\x04base\x18\x01 \x01(\v2\x12.ai.CommonResponseR\x04base\x12#\n" +
+	"\x04list\x18\x02 \x03(\v2\x0f.ai.SessionInfoR\x04list\x12 \n" +
+	"\x04page\x18\x03 \x01(\v2\f.ai.PageInfoR\x04page\"\xa5\x01\n" +
+	"\x12SendMessageToAiReq\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\x04R\x06userId\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x02 \x01(\x04R\tsessionId\x12\x19\n" +
+	"\bmsg_type\x18\x03 \x01(\x05R\amsgType\x12\x18\n" +
+	"\acontent\x18\x04 \x01(\tR\acontent\x12\"\n" +
+	"\rclient_msg_id\x18\x05 \x01(\x04R\vclientMsgId\"\x81\x01\n" +
 	"\x0fSendMessageResp\x12\x15\n" +
 	"\x06msg_id\x18\x01 \x01(\x04R\x05msgId\x12\x1b\n" +
 	"\tsend_time\x18\x02 \x01(\x03R\bsendTime\x12:\n" +
-	"\x0eCommonResponse\x18\x03 \x01(\v2\x12.ai.CommonResponseR\x0eCommonResponse\"r\n" +
+	"\x0eCommonResponse\x18\x03 \x01(\v2\x12.ai.CommonResponseR\x0eCommonResponse\"\x91\x01\n" +
 	"\x1fGetChatHistoryMessagesFromAIReq\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x04R\x06userId\x12 \n" +
+	"\auser_id\x18\x01 \x01(\x04R\x06userId\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x02 \x01(\x04R\tsessionId\x12 \n" +
 	"\fstart_msg_id\x18\x04 \x01(\x04R\n" +
 	"startMsgId\x12\x14\n" +
-	"\x05limit\x18\x05 \x01(\x05R\x05limit\"q\n" +
+	"\x05limit\x18\x05 \x01(\x05R\x05limit\"\x90\x01\n" +
 	"\x1eGetChatUnreadMessagesFromAIReq\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x04R\x06userId\x12 \n" +
+	"\auser_id\x18\x01 \x01(\x04R\x06userId\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x02 \x01(\x04R\tsessionId\x12 \n" +
 	"\fstart_msg_id\x18\x04 \x01(\x04R\n" +
 	"startMsgId\x12\x14\n" +
-	"\x05limit\x18\x05 \x01(\x05R\x05limit\"c\n" +
+	"\x05limit\x18\x05 \x01(\x05R\x05limit\"e\n" +
 	"\x14UpdateLastReadMsgRep\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x04R\x06userId\x12\x1b\n" +
-	"\ttarget_id\x18\x02 \x01(\x04R\btargetId\x12\x15\n" +
-	"\x06msg_id\x18\x03 \x01(\x04R\x05msgId2\xa7\x03\n" +
+	"\auser_id\x18\x01 \x01(\x04R\x06userId\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x02 \x01(\x04R\tsessionId\x12\x15\n" +
+	"\x06msg_id\x18\x03 \x01(\x04R\x05msgId2\xe4\x03\n" +
 	"\vChatService\x127\n" +
 	"\fSetAgentInfo\x12\x13.ai.SetAgentInfoReq\x1a\x12.ai.CommonResponse\x129\n" +
-	"\fGetAgentInfo\x12\x13.ai.GetAgentInfoReq\x1a\x14.ai.GetAgentInfoResp\x12A\n" +
-	"\x12SendPrivateMessage\x12\x16.ai.SendMessageToAiReq\x1a\x13.ai.SendMessageResp\x12N\n" +
+	"\fGetAgentInfo\x12\x13.ai.GetAgentInfoReq\x1a\x14.ai.GetAgentInfoResp\x12?\n" +
+	"\x0eGetSessionList\x12\x15.ai.GetSessionListReq\x1a\x16.ai.GetSessionListResp\x12=\n" +
+	"\x0eSendLLMMessage\x12\x16.ai.SendMessageToAiReq\x1a\x13.ai.SendMessageResp\x12N\n" +
 	"\x13GetHistoryAiMessage\x12#.ai.GetChatHistoryMessagesFromAIReq\x1a\x12.ai.CommonResponse\x12L\n" +
 	"\x12GetUnreadAiMessage\x12\".ai.GetChatUnreadMessagesFromAIReq\x1a\x12.ai.CommonResponse\x12C\n" +
 	"\x13UpdateAiMsgLastRead\x12\x18.ai.UpdateLastReadMsgRep\x1a\x12.ai.CommonResponseB\x06Z\x04./aib\x06proto3"
@@ -632,37 +1006,48 @@ func file_ai_proto_rawDescGZIP() []byte {
 	return file_ai_proto_rawDescData
 }
 
-var file_ai_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_ai_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_ai_proto_goTypes = []any{
 	(*CommonResponse)(nil),                  // 0: ai.CommonResponse
-	(*SetAgentInfoReq)(nil),                 // 1: ai.SetAgentInfoReq
-	(*GetAgentInfoReq)(nil),                 // 2: ai.GetAgentInfoReq
-	(*GetAgentInfoResp)(nil),                // 3: ai.GetAgentInfoResp
-	(*SendMessageToAiReq)(nil),              // 4: ai.SendMessageToAiReq
-	(*SendMessageResp)(nil),                 // 5: ai.SendMessageResp
-	(*GetChatHistoryMessagesFromAIReq)(nil), // 6: ai.GetChatHistoryMessagesFromAIReq
-	(*GetChatUnreadMessagesFromAIReq)(nil),  // 7: ai.GetChatUnreadMessagesFromAIReq
-	(*UpdateLastReadMsgRep)(nil),            // 8: ai.UpdateLastReadMsgRep
+	(*PageRequest)(nil),                     // 1: ai.PageRequest
+	(*PageInfo)(nil),                        // 2: ai.PageInfo
+	(*SetAgentInfoReq)(nil),                 // 3: ai.SetAgentInfoReq
+	(*GetAgentInfoReq)(nil),                 // 4: ai.GetAgentInfoReq
+	(*GetAgentInfoResp)(nil),                // 5: ai.GetAgentInfoResp
+	(*GetSessionListReq)(nil),               // 6: ai.GetSessionListReq
+	(*SessionInfo)(nil),                     // 7: ai.SessionInfo
+	(*GetSessionListResp)(nil),              // 8: ai.GetSessionListResp
+	(*SendMessageToAiReq)(nil),              // 9: ai.SendMessageToAiReq
+	(*SendMessageResp)(nil),                 // 10: ai.SendMessageResp
+	(*GetChatHistoryMessagesFromAIReq)(nil), // 11: ai.GetChatHistoryMessagesFromAIReq
+	(*GetChatUnreadMessagesFromAIReq)(nil),  // 12: ai.GetChatUnreadMessagesFromAIReq
+	(*UpdateLastReadMsgRep)(nil),            // 13: ai.UpdateLastReadMsgRep
 }
 var file_ai_proto_depIdxs = []int32{
-	0, // 0: ai.SendMessageResp.CommonResponse:type_name -> ai.CommonResponse
-	1, // 1: ai.ChatService.SetAgentInfo:input_type -> ai.SetAgentInfoReq
-	2, // 2: ai.ChatService.GetAgentInfo:input_type -> ai.GetAgentInfoReq
-	4, // 3: ai.ChatService.SendPrivateMessage:input_type -> ai.SendMessageToAiReq
-	6, // 4: ai.ChatService.GetHistoryAiMessage:input_type -> ai.GetChatHistoryMessagesFromAIReq
-	7, // 5: ai.ChatService.GetUnreadAiMessage:input_type -> ai.GetChatUnreadMessagesFromAIReq
-	8, // 6: ai.ChatService.UpdateAiMsgLastRead:input_type -> ai.UpdateLastReadMsgRep
-	0, // 7: ai.ChatService.SetAgentInfo:output_type -> ai.CommonResponse
-	3, // 8: ai.ChatService.GetAgentInfo:output_type -> ai.GetAgentInfoResp
-	5, // 9: ai.ChatService.SendPrivateMessage:output_type -> ai.SendMessageResp
-	0, // 10: ai.ChatService.GetHistoryAiMessage:output_type -> ai.CommonResponse
-	0, // 11: ai.ChatService.GetUnreadAiMessage:output_type -> ai.CommonResponse
-	0, // 12: ai.ChatService.UpdateAiMsgLastRead:output_type -> ai.CommonResponse
-	7, // [7:13] is the sub-list for method output_type
-	1, // [1:7] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	1,  // 0: ai.GetSessionListReq.page:type_name -> ai.PageRequest
+	0,  // 1: ai.GetSessionListResp.base:type_name -> ai.CommonResponse
+	7,  // 2: ai.GetSessionListResp.list:type_name -> ai.SessionInfo
+	2,  // 3: ai.GetSessionListResp.page:type_name -> ai.PageInfo
+	0,  // 4: ai.SendMessageResp.CommonResponse:type_name -> ai.CommonResponse
+	3,  // 5: ai.ChatService.SetAgentInfo:input_type -> ai.SetAgentInfoReq
+	4,  // 6: ai.ChatService.GetAgentInfo:input_type -> ai.GetAgentInfoReq
+	6,  // 7: ai.ChatService.GetSessionList:input_type -> ai.GetSessionListReq
+	9,  // 8: ai.ChatService.SendLLMMessage:input_type -> ai.SendMessageToAiReq
+	11, // 9: ai.ChatService.GetHistoryAiMessage:input_type -> ai.GetChatHistoryMessagesFromAIReq
+	12, // 10: ai.ChatService.GetUnreadAiMessage:input_type -> ai.GetChatUnreadMessagesFromAIReq
+	13, // 11: ai.ChatService.UpdateAiMsgLastRead:input_type -> ai.UpdateLastReadMsgRep
+	0,  // 12: ai.ChatService.SetAgentInfo:output_type -> ai.CommonResponse
+	5,  // 13: ai.ChatService.GetAgentInfo:output_type -> ai.GetAgentInfoResp
+	8,  // 14: ai.ChatService.GetSessionList:output_type -> ai.GetSessionListResp
+	10, // 15: ai.ChatService.SendLLMMessage:output_type -> ai.SendMessageResp
+	0,  // 16: ai.ChatService.GetHistoryAiMessage:output_type -> ai.CommonResponse
+	0,  // 17: ai.ChatService.GetUnreadAiMessage:output_type -> ai.CommonResponse
+	0,  // 18: ai.ChatService.UpdateAiMsgLastRead:output_type -> ai.CommonResponse
+	12, // [12:19] is the sub-list for method output_type
+	5,  // [5:12] is the sub-list for method input_type
+	5,  // [5:5] is the sub-list for extension type_name
+	5,  // [5:5] is the sub-list for extension extendee
+	0,  // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_ai_proto_init() }
@@ -676,7 +1061,7 @@ func file_ai_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_ai_proto_rawDesc), len(file_ai_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   9,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

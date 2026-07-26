@@ -19,8 +19,13 @@ type (
 	GetAgentInfoResp                = ai.GetAgentInfoResp
 	GetChatHistoryMessagesFromAIReq = ai.GetChatHistoryMessagesFromAIReq
 	GetChatUnreadMessagesFromAIReq  = ai.GetChatUnreadMessagesFromAIReq
+	GetSessionListReq               = ai.GetSessionListReq
+	GetSessionListResp              = ai.GetSessionListResp
+	PageInfo                        = ai.PageInfo
+	PageRequest                     = ai.PageRequest
 	SendMessageResp                 = ai.SendMessageResp
 	SendMessageToAiReq              = ai.SendMessageToAiReq
+	SessionInfo                     = ai.SessionInfo
 	SetAgentInfoReq                 = ai.SetAgentInfoReq
 	UpdateLastReadMsgRep            = ai.UpdateLastReadMsgRep
 
@@ -29,8 +34,10 @@ type (
 		SetAgentInfo(ctx context.Context, in *SetAgentInfoReq, opts ...grpc.CallOption) (*CommonResponse, error)
 		// 获取智能体信息
 		GetAgentInfo(ctx context.Context, in *GetAgentInfoReq, opts ...grpc.CallOption) (*GetAgentInfoResp, error)
-		// 发送私聊消息
-		SendPrivateMessage(ctx context.Context, in *SendMessageToAiReq, opts ...grpc.CallOption) (*SendMessageResp, error)
+		// 拉取会话列表
+		GetSessionList(ctx context.Context, in *GetSessionListReq, opts ...grpc.CallOption) (*GetSessionListResp, error)
+		// 发送消息给LLM
+		SendLLMMessage(ctx context.Context, in *SendMessageToAiReq, opts ...grpc.CallOption) (*SendMessageResp, error)
 		// 拉取历史消息, WS推送
 		GetHistoryAiMessage(ctx context.Context, in *GetChatHistoryMessagesFromAIReq, opts ...grpc.CallOption) (*CommonResponse, error)
 		// 拉取新消息，WS推送
@@ -62,10 +69,16 @@ func (m *defaultChatService) GetAgentInfo(ctx context.Context, in *GetAgentInfoR
 	return client.GetAgentInfo(ctx, in, opts...)
 }
 
-// 发送私聊消息
-func (m *defaultChatService) SendPrivateMessage(ctx context.Context, in *SendMessageToAiReq, opts ...grpc.CallOption) (*SendMessageResp, error) {
+// 拉取会话列表
+func (m *defaultChatService) GetSessionList(ctx context.Context, in *GetSessionListReq, opts ...grpc.CallOption) (*GetSessionListResp, error) {
 	client := ai.NewChatServiceClient(m.cli.Conn())
-	return client.SendPrivateMessage(ctx, in, opts...)
+	return client.GetSessionList(ctx, in, opts...)
+}
+
+// 发送消息给LLM
+func (m *defaultChatService) SendLLMMessage(ctx context.Context, in *SendMessageToAiReq, opts ...grpc.CallOption) (*SendMessageResp, error) {
+	client := ai.NewChatServiceClient(m.cli.Conn())
+	return client.SendLLMMessage(ctx, in, opts...)
 }
 
 // 拉取历史消息, WS推送

@@ -3,10 +3,12 @@ package logic
 import (
 	"context"
 
+	"IMM/common/models"
 	"IMM/rpc/ai/ai"
 	"IMM/rpc/ai/internal/svc"
 
 	"github.com/zeromicro/go-zero/core/logx"
+	"gorm.io/gorm"
 )
 
 type SetAgentInfoLogic struct {
@@ -25,7 +27,11 @@ func NewSetAgentInfoLogic(ctx context.Context, svcCtx *svc.ServiceContext) *SetA
 
 // 自定义智能体
 func (l *SetAgentInfoLogic) SetAgentInfo(in *ai.SetAgentInfoReq) (*ai.CommonResponse, error) {
-	// todo: add your logic here and delete this line
+	_, err := gorm.G[models.AgentInfo](l.svcCtx.DB).Where("user_id = ? AND id = ?", in.UserId, in.AgentId).Updates(l.ctx, models.AgentInfo{Name: in.AgentName, Describe: in.AgentPrompt, Avatar: in.AgentAvatar})
 
-	return &ai.CommonResponse{}, nil
+	if err != nil {
+		return nil, err
+	}
+
+	return &ai.CommonResponse{Code: 100, Msg: "OK"}, nil
 }

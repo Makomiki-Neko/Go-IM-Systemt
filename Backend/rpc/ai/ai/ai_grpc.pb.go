@@ -21,7 +21,8 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	ChatService_SetAgentInfo_FullMethodName        = "/ai.ChatService/SetAgentInfo"
 	ChatService_GetAgentInfo_FullMethodName        = "/ai.ChatService/GetAgentInfo"
-	ChatService_SendPrivateMessage_FullMethodName  = "/ai.ChatService/SendPrivateMessage"
+	ChatService_GetSessionList_FullMethodName      = "/ai.ChatService/GetSessionList"
+	ChatService_SendLLMMessage_FullMethodName      = "/ai.ChatService/SendLLMMessage"
 	ChatService_GetHistoryAiMessage_FullMethodName = "/ai.ChatService/GetHistoryAiMessage"
 	ChatService_GetUnreadAiMessage_FullMethodName  = "/ai.ChatService/GetUnreadAiMessage"
 	ChatService_UpdateAiMsgLastRead_FullMethodName = "/ai.ChatService/UpdateAiMsgLastRead"
@@ -37,8 +38,10 @@ type ChatServiceClient interface {
 	SetAgentInfo(ctx context.Context, in *SetAgentInfoReq, opts ...grpc.CallOption) (*CommonResponse, error)
 	// 获取智能体信息
 	GetAgentInfo(ctx context.Context, in *GetAgentInfoReq, opts ...grpc.CallOption) (*GetAgentInfoResp, error)
-	// 发送私聊消息
-	SendPrivateMessage(ctx context.Context, in *SendMessageToAiReq, opts ...grpc.CallOption) (*SendMessageResp, error)
+	// 拉取会话列表
+	GetSessionList(ctx context.Context, in *GetSessionListReq, opts ...grpc.CallOption) (*GetSessionListResp, error)
+	// 发送消息给LLM
+	SendLLMMessage(ctx context.Context, in *SendMessageToAiReq, opts ...grpc.CallOption) (*SendMessageResp, error)
 	// 拉取历史消息, WS推送
 	GetHistoryAiMessage(ctx context.Context, in *GetChatHistoryMessagesFromAIReq, opts ...grpc.CallOption) (*CommonResponse, error)
 	// 拉取新消息，WS推送
@@ -75,10 +78,20 @@ func (c *chatServiceClient) GetAgentInfo(ctx context.Context, in *GetAgentInfoRe
 	return out, nil
 }
 
-func (c *chatServiceClient) SendPrivateMessage(ctx context.Context, in *SendMessageToAiReq, opts ...grpc.CallOption) (*SendMessageResp, error) {
+func (c *chatServiceClient) GetSessionList(ctx context.Context, in *GetSessionListReq, opts ...grpc.CallOption) (*GetSessionListResp, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetSessionListResp)
+	err := c.cc.Invoke(ctx, ChatService_GetSessionList_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *chatServiceClient) SendLLMMessage(ctx context.Context, in *SendMessageToAiReq, opts ...grpc.CallOption) (*SendMessageResp, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SendMessageResp)
-	err := c.cc.Invoke(ctx, ChatService_SendPrivateMessage_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ChatService_SendLLMMessage_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -125,8 +138,10 @@ type ChatServiceServer interface {
 	SetAgentInfo(context.Context, *SetAgentInfoReq) (*CommonResponse, error)
 	// 获取智能体信息
 	GetAgentInfo(context.Context, *GetAgentInfoReq) (*GetAgentInfoResp, error)
-	// 发送私聊消息
-	SendPrivateMessage(context.Context, *SendMessageToAiReq) (*SendMessageResp, error)
+	// 拉取会话列表
+	GetSessionList(context.Context, *GetSessionListReq) (*GetSessionListResp, error)
+	// 发送消息给LLM
+	SendLLMMessage(context.Context, *SendMessageToAiReq) (*SendMessageResp, error)
 	// 拉取历史消息, WS推送
 	GetHistoryAiMessage(context.Context, *GetChatHistoryMessagesFromAIReq) (*CommonResponse, error)
 	// 拉取新消息，WS推送
@@ -149,8 +164,11 @@ func (UnimplementedChatServiceServer) SetAgentInfo(context.Context, *SetAgentInf
 func (UnimplementedChatServiceServer) GetAgentInfo(context.Context, *GetAgentInfoReq) (*GetAgentInfoResp, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetAgentInfo not implemented")
 }
-func (UnimplementedChatServiceServer) SendPrivateMessage(context.Context, *SendMessageToAiReq) (*SendMessageResp, error) {
-	return nil, status.Error(codes.Unimplemented, "method SendPrivateMessage not implemented")
+func (UnimplementedChatServiceServer) GetSessionList(context.Context, *GetSessionListReq) (*GetSessionListResp, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetSessionList not implemented")
+}
+func (UnimplementedChatServiceServer) SendLLMMessage(context.Context, *SendMessageToAiReq) (*SendMessageResp, error) {
+	return nil, status.Error(codes.Unimplemented, "method SendLLMMessage not implemented")
 }
 func (UnimplementedChatServiceServer) GetHistoryAiMessage(context.Context, *GetChatHistoryMessagesFromAIReq) (*CommonResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetHistoryAiMessage not implemented")
@@ -218,20 +236,38 @@ func _ChatService_GetAgentInfo_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ChatService_SendPrivateMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ChatService_GetSessionList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSessionListReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatServiceServer).GetSessionList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChatService_GetSessionList_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatServiceServer).GetSessionList(ctx, req.(*GetSessionListReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ChatService_SendLLMMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SendMessageToAiReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ChatServiceServer).SendPrivateMessage(ctx, in)
+		return srv.(ChatServiceServer).SendLLMMessage(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ChatService_SendPrivateMessage_FullMethodName,
+		FullMethod: ChatService_SendLLMMessage_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChatServiceServer).SendPrivateMessage(ctx, req.(*SendMessageToAiReq))
+		return srv.(ChatServiceServer).SendLLMMessage(ctx, req.(*SendMessageToAiReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -306,8 +342,12 @@ var ChatService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ChatService_GetAgentInfo_Handler,
 		},
 		{
-			MethodName: "SendPrivateMessage",
-			Handler:    _ChatService_SendPrivateMessage_Handler,
+			MethodName: "GetSessionList",
+			Handler:    _ChatService_GetSessionList_Handler,
+		},
+		{
+			MethodName: "SendLLMMessage",
+			Handler:    _ChatService_SendLLMMessage_Handler,
 		},
 		{
 			MethodName: "GetHistoryAiMessage",

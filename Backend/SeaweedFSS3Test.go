@@ -184,7 +184,7 @@ func main2() {
 	log.Println("[INFO] 程序结束")
 }
 
-func main() {
+func main3() {
 	intervals := [][]int{{1, 4}, {3, 6}, {2, 8}}
 	sort.Slice(intervals, func(i, j int) bool {
 		if intervals[i][0] < intervals[j][0] {

@@ -3,10 +3,12 @@ package logic
 import (
 	"context"
 
+	"IMM/common/models"
 	"IMM/rpc/ai/ai"
 	"IMM/rpc/ai/internal/svc"
 
 	"github.com/zeromicro/go-zero/core/logx"
+	"gorm.io/gorm"
 )
 
 type UpdateAiMsgLastReadLogic struct {
@@ -25,7 +27,11 @@ func NewUpdateAiMsgLastReadLogic(ctx context.Context, svcCtx *svc.ServiceContext
 
 // 更新用户最后已读信息
 func (l *UpdateAiMsgLastReadLogic) UpdateAiMsgLastRead(in *ai.UpdateLastReadMsgRep) (*ai.CommonResponse, error) {
-	// todo: add your logic here and delete this line
+	_, err := gorm.G[models.LlmSession](l.svcCtx.DB).Where("user_id = ? AND session_id = ? AND last_msg_id < ?", in.UserId, in.SessionId, in.MsgId).Updates(l.ctx, models.LlmSession{LastMsgID: in.MsgId})
 
-	return &ai.CommonResponse{}, nil
+	if err != nil {
+		return &ai.CommonResponse{Code: 400, Msg: err.Error()}, nil
+	}
+
+	return &ai.CommonResponse{Code: 100, Msg: "OK"}, nil
 }
