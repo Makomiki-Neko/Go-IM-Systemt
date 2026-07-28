@@ -2,10 +2,13 @@ Name: ai.rpc
 ListenOn: 0.0.0.0:8080
 Etcd:
   Hosts:
-  - 127.0.0.1:2379
+  - 127.0.0.1:12379
   Key: ai.rpc
 
 OpenAI:
   Api: http://127.0.0.1:11434
   Key: None
   ModelName: Gemma4:e4b
+  Temperature: 0.6
+  TopP: 0.9
+  MaxToken: 4096

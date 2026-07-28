@@ -14,14 +14,14 @@ import (
 	"gorm.io/gorm"
 )
 
-type SendLLMMessageLogic struct {
+type ComposeAiMessageLogic struct {
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 	logx.Logger
 }
 
-func NewSendLLMMessageLogic(ctx context.Context, svcCtx *svc.ServiceContext) *SendLLMMessageLogic {
-	return &SendLLMMessageLogic{
+func NewComposeAiMessageLogic(ctx context.Context, svcCtx *svc.ServiceContext) *ComposeAiMessageLogic {
+	return &ComposeAiMessageLogic{
 		ctx:    ctx,
 		svcCtx: svcCtx,
 		Logger: logx.WithContext(ctx),
@@ -29,8 +29,25 @@ func NewSendLLMMessageLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Se
 }
 
 // 发送消息给LLM
-func (l *SendLLMMessageLogic) SendLLMMessage(in *ai.SendMessageToAiReq) (*ai.SendMessageResp, error) {
+func (l *ComposeAiMessageLogic) ComposeAiMessage(in *ai.SendMessageToAiReq) (*ai.SendMessageResp, error) {
 	// * 暂时未对图片类型信息进行处理
+
+	// 幂等，Redis临时记录避免重复消息
+	// 1. 构建幂等Key
+	idempotentKey := fmt.Sprintf("ai:msg:%d:%d", in.UserId, in.ClientMsgId)
+
+	// 2. 原子操作：尝试设置 Key, Setnx 返回 true 表示设置成功（首次请求），返回 false 表示 Key 已存在（重复请求）
+	success, err := l.svcCtx.Redis.Setnx(idempotentKey, "1")
+	if err != nil {
+		return nil, errors.New("Redis Error: " + err.Error())
+	}
+
+	// 3. 如果设置失败，说明是重复请求，直接返回（幂等返回）
+	if !success {
+		logx.Infof("Duplicate Ai Request, clientMsgId: %v", in.ClientMsgId)
+		return &ai.SendMessageResp{CommonResponse: &ai.CommonResponse{Code: 206}}, nil
+	}
+	l.svcCtx.Redis.Expire(idempotentKey, 300)
 
 	// 拼接上下文、提交给LLM队列
 	// 从Redis缓存中读
@@ -60,9 +77,9 @@ func (l *SendLLMMessageLogic) SendLLMMessage(in *ai.SendMessageToAiReq) (*ai.Sen
 		chatReq.Messages = append(chatReq.Messages, svc.ChatMessage{Role: "user", Content: in.Content}) // 插入用户消息
 	}
 
-	var Msgs []models.LlmMessage
 	// redis 过期
 	if historyMsg == nil {
+		var Msgs []models.LlmMessage
 		var last uint64
 		summary, errS := gorm.G[models.SessionSummary](l.svcCtx.DB).Where("session_id = ?", in.SessionId).First(l.ctx)
 		if errS != nil {
@@ -101,7 +118,7 @@ func (l *SendLLMMessageLogic) SendLLMMessage(in *ai.SendMessageToAiReq) (*ai.Sen
 		}
 	}
 
-	// 记录到数据库
+	// 记录到数据库  --- 存在LLM失败却入库问题
 	useMsg := models.LlmMessage{
 		UserID:    in.UserId,
 		SessionID: in.SessionId,
@@ -115,17 +132,19 @@ func (l *SendLLMMessageLogic) SendLLMMessage(in *ai.SendMessageToAiReq) (*ai.Sen
 		return nil, err
 	}
 
-	// 消息队列投递
 	sendData, err := json.Marshal(chatReq)
 	if err != nil {
 		logx.Info("Json Marshal Failed:", err.Error())
 		return nil, err
 	}
-	err = l.svcCtx.RabbitMQ.Publish(l.ctx, "im.ai.chat.request", sendData)
-	if err != nil {
-		logx.Info("MQ Publish Failed:", err.Error())
-		return nil, err
-	}
+	// 消息队列投递 由网关进行
+	/*
+		err = l.svcCtx.RabbitMQ.Publish(l.ctx, "im.ai.chat.request", sendData)
+		if err != nil {
+			logx.Info("MQ Publish Failed:", err.Error())
+			return nil, err
+		}
+	*/
 
-	return &ai.SendMessageResp{MsgId: useMsg.MsgID, SendTime: useMsg.UpdatedAt.Unix(), CommonResponse: &ai.CommonResponse{Code: 100, Msg: "OK"}}, nil
+	return &ai.SendMessageResp{MsgId: useMsg.MsgID, SendTime: useMsg.UpdatedAt.Unix(), CommonResponse: &ai.CommonResponse{Code: 200, Msg: "OK", Data: sendData}}, nil
 }

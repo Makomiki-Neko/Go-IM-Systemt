@@ -19,29 +19,32 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ChatService_SetAgentInfo_FullMethodName        = "/ai.ChatService/SetAgentInfo"
-	ChatService_GetAgentInfo_FullMethodName        = "/ai.ChatService/GetAgentInfo"
-	ChatService_GetSessionList_FullMethodName      = "/ai.ChatService/GetSessionList"
-	ChatService_SendLLMMessage_FullMethodName      = "/ai.ChatService/SendLLMMessage"
-	ChatService_GetHistoryAiMessage_FullMethodName = "/ai.ChatService/GetHistoryAiMessage"
-	ChatService_GetUnreadAiMessage_FullMethodName  = "/ai.ChatService/GetUnreadAiMessage"
-	ChatService_UpdateAiMsgLastRead_FullMethodName = "/ai.ChatService/UpdateAiMsgLastRead"
+	AiService_SetAgentInfo_FullMethodName        = "/ai.AiService/SetAgentInfo"
+	AiService_GetAgentInfo_FullMethodName        = "/ai.AiService/GetAgentInfo"
+	AiService_GetSessionList_FullMethodName      = "/ai.AiService/GetSessionList"
+	AiService_ComposeAiMessage_FullMethodName    = "/ai.AiService/ComposeAiMessage"
+	AiService_CallLlm_FullMethodName             = "/ai.AiService/CallLlm"
+	AiService_GetHistoryAiMessage_FullMethodName = "/ai.AiService/GetHistoryAiMessage"
+	AiService_GetUnreadAiMessage_FullMethodName  = "/ai.AiService/GetUnreadAiMessage"
+	AiService_UpdateAiMsgLastRead_FullMethodName = "/ai.AiService/UpdateAiMsgLastRead"
 )
 
-// ChatServiceClient is the client API for ChatService service.
+// AiServiceClient is the client API for AiService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
 // ---------- 服务定义 ----------
-type ChatServiceClient interface {
+type AiServiceClient interface {
 	// 自定义智能体
 	SetAgentInfo(ctx context.Context, in *SetAgentInfoReq, opts ...grpc.CallOption) (*CommonResponse, error)
 	// 获取智能体信息
 	GetAgentInfo(ctx context.Context, in *GetAgentInfoReq, opts ...grpc.CallOption) (*GetAgentInfoResp, error)
 	// 拉取会话列表
 	GetSessionList(ctx context.Context, in *GetSessionListReq, opts ...grpc.CallOption) (*GetSessionListResp, error)
-	// 发送消息给LLM
-	SendLLMMessage(ctx context.Context, in *SendMessageToAiReq, opts ...grpc.CallOption) (*SendMessageResp, error)
+	// 构建 Ai 请求体
+	ComposeAiMessage(ctx context.Context, in *SendMessageToAiReq, opts ...grpc.CallOption) (*SendMessageResp, error)
+	// 调用 LLM 服务
+	CallLlm(ctx context.Context, in *CallLlmReq, opts ...grpc.CallOption) (*CommonResponse, error)
 	// 拉取历史消息, WS推送
 	GetHistoryAiMessage(ctx context.Context, in *GetChatHistoryMessagesFromAIReq, opts ...grpc.CallOption) (*CommonResponse, error)
 	// 拉取新消息，WS推送
@@ -50,316 +53,353 @@ type ChatServiceClient interface {
 	UpdateAiMsgLastRead(ctx context.Context, in *UpdateLastReadMsgRep, opts ...grpc.CallOption) (*CommonResponse, error)
 }
 
-type chatServiceClient struct {
+type aiServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewChatServiceClient(cc grpc.ClientConnInterface) ChatServiceClient {
-	return &chatServiceClient{cc}
+func NewAiServiceClient(cc grpc.ClientConnInterface) AiServiceClient {
+	return &aiServiceClient{cc}
 }
 
-func (c *chatServiceClient) SetAgentInfo(ctx context.Context, in *SetAgentInfoReq, opts ...grpc.CallOption) (*CommonResponse, error) {
+func (c *aiServiceClient) SetAgentInfo(ctx context.Context, in *SetAgentInfoReq, opts ...grpc.CallOption) (*CommonResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CommonResponse)
-	err := c.cc.Invoke(ctx, ChatService_SetAgentInfo_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, AiService_SetAgentInfo_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *chatServiceClient) GetAgentInfo(ctx context.Context, in *GetAgentInfoReq, opts ...grpc.CallOption) (*GetAgentInfoResp, error) {
+func (c *aiServiceClient) GetAgentInfo(ctx context.Context, in *GetAgentInfoReq, opts ...grpc.CallOption) (*GetAgentInfoResp, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetAgentInfoResp)
-	err := c.cc.Invoke(ctx, ChatService_GetAgentInfo_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, AiService_GetAgentInfo_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *chatServiceClient) GetSessionList(ctx context.Context, in *GetSessionListReq, opts ...grpc.CallOption) (*GetSessionListResp, error) {
+func (c *aiServiceClient) GetSessionList(ctx context.Context, in *GetSessionListReq, opts ...grpc.CallOption) (*GetSessionListResp, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetSessionListResp)
-	err := c.cc.Invoke(ctx, ChatService_GetSessionList_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, AiService_GetSessionList_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *chatServiceClient) SendLLMMessage(ctx context.Context, in *SendMessageToAiReq, opts ...grpc.CallOption) (*SendMessageResp, error) {
+func (c *aiServiceClient) ComposeAiMessage(ctx context.Context, in *SendMessageToAiReq, opts ...grpc.CallOption) (*SendMessageResp, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SendMessageResp)
-	err := c.cc.Invoke(ctx, ChatService_SendLLMMessage_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, AiService_ComposeAiMessage_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *chatServiceClient) GetHistoryAiMessage(ctx context.Context, in *GetChatHistoryMessagesFromAIReq, opts ...grpc.CallOption) (*CommonResponse, error) {
+func (c *aiServiceClient) CallLlm(ctx context.Context, in *CallLlmReq, opts ...grpc.CallOption) (*CommonResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CommonResponse)
-	err := c.cc.Invoke(ctx, ChatService_GetHistoryAiMessage_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, AiService_CallLlm_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *chatServiceClient) GetUnreadAiMessage(ctx context.Context, in *GetChatUnreadMessagesFromAIReq, opts ...grpc.CallOption) (*CommonResponse, error) {
+func (c *aiServiceClient) GetHistoryAiMessage(ctx context.Context, in *GetChatHistoryMessagesFromAIReq, opts ...grpc.CallOption) (*CommonResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CommonResponse)
-	err := c.cc.Invoke(ctx, ChatService_GetUnreadAiMessage_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, AiService_GetHistoryAiMessage_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *chatServiceClient) UpdateAiMsgLastRead(ctx context.Context, in *UpdateLastReadMsgRep, opts ...grpc.CallOption) (*CommonResponse, error) {
+func (c *aiServiceClient) GetUnreadAiMessage(ctx context.Context, in *GetChatUnreadMessagesFromAIReq, opts ...grpc.CallOption) (*CommonResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CommonResponse)
-	err := c.cc.Invoke(ctx, ChatService_UpdateAiMsgLastRead_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, AiService_GetUnreadAiMessage_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// ChatServiceServer is the server API for ChatService service.
-// All implementations must embed UnimplementedChatServiceServer
+func (c *aiServiceClient) UpdateAiMsgLastRead(ctx context.Context, in *UpdateLastReadMsgRep, opts ...grpc.CallOption) (*CommonResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CommonResponse)
+	err := c.cc.Invoke(ctx, AiService_UpdateAiMsgLastRead_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// AiServiceServer is the server API for AiService service.
+// All implementations must embed UnimplementedAiServiceServer
 // for forward compatibility.
 //
 // ---------- 服务定义 ----------
-type ChatServiceServer interface {
+type AiServiceServer interface {
 	// 自定义智能体
 	SetAgentInfo(context.Context, *SetAgentInfoReq) (*CommonResponse, error)
 	// 获取智能体信息
 	GetAgentInfo(context.Context, *GetAgentInfoReq) (*GetAgentInfoResp, error)
 	// 拉取会话列表
 	GetSessionList(context.Context, *GetSessionListReq) (*GetSessionListResp, error)
-	// 发送消息给LLM
-	SendLLMMessage(context.Context, *SendMessageToAiReq) (*SendMessageResp, error)
+	// 构建 Ai 请求体
+	ComposeAiMessage(context.Context, *SendMessageToAiReq) (*SendMessageResp, error)
+	// 调用 LLM 服务
+	CallLlm(context.Context, *CallLlmReq) (*CommonResponse, error)
 	// 拉取历史消息, WS推送
 	GetHistoryAiMessage(context.Context, *GetChatHistoryMessagesFromAIReq) (*CommonResponse, error)
 	// 拉取新消息，WS推送
 	GetUnreadAiMessage(context.Context, *GetChatUnreadMessagesFromAIReq) (*CommonResponse, error)
 	// 更新用户最后已读信息
 	UpdateAiMsgLastRead(context.Context, *UpdateLastReadMsgRep) (*CommonResponse, error)
-	mustEmbedUnimplementedChatServiceServer()
+	mustEmbedUnimplementedAiServiceServer()
 }
 
-// UnimplementedChatServiceServer must be embedded to have
+// UnimplementedAiServiceServer must be embedded to have
 // forward compatible implementations.
 //
 // NOTE: this should be embedded by value instead of pointer to avoid a nil
 // pointer dereference when methods are called.
-type UnimplementedChatServiceServer struct{}
+type UnimplementedAiServiceServer struct{}
 
-func (UnimplementedChatServiceServer) SetAgentInfo(context.Context, *SetAgentInfoReq) (*CommonResponse, error) {
+func (UnimplementedAiServiceServer) SetAgentInfo(context.Context, *SetAgentInfoReq) (*CommonResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SetAgentInfo not implemented")
 }
-func (UnimplementedChatServiceServer) GetAgentInfo(context.Context, *GetAgentInfoReq) (*GetAgentInfoResp, error) {
+func (UnimplementedAiServiceServer) GetAgentInfo(context.Context, *GetAgentInfoReq) (*GetAgentInfoResp, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetAgentInfo not implemented")
 }
-func (UnimplementedChatServiceServer) GetSessionList(context.Context, *GetSessionListReq) (*GetSessionListResp, error) {
+func (UnimplementedAiServiceServer) GetSessionList(context.Context, *GetSessionListReq) (*GetSessionListResp, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetSessionList not implemented")
 }
-func (UnimplementedChatServiceServer) SendLLMMessage(context.Context, *SendMessageToAiReq) (*SendMessageResp, error) {
-	return nil, status.Error(codes.Unimplemented, "method SendLLMMessage not implemented")
+func (UnimplementedAiServiceServer) ComposeAiMessage(context.Context, *SendMessageToAiReq) (*SendMessageResp, error) {
+	return nil, status.Error(codes.Unimplemented, "method ComposeAiMessage not implemented")
 }
-func (UnimplementedChatServiceServer) GetHistoryAiMessage(context.Context, *GetChatHistoryMessagesFromAIReq) (*CommonResponse, error) {
+func (UnimplementedAiServiceServer) CallLlm(context.Context, *CallLlmReq) (*CommonResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CallLlm not implemented")
+}
+func (UnimplementedAiServiceServer) GetHistoryAiMessage(context.Context, *GetChatHistoryMessagesFromAIReq) (*CommonResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetHistoryAiMessage not implemented")
 }
-func (UnimplementedChatServiceServer) GetUnreadAiMessage(context.Context, *GetChatUnreadMessagesFromAIReq) (*CommonResponse, error) {
+func (UnimplementedAiServiceServer) GetUnreadAiMessage(context.Context, *GetChatUnreadMessagesFromAIReq) (*CommonResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetUnreadAiMessage not implemented")
 }
-func (UnimplementedChatServiceServer) UpdateAiMsgLastRead(context.Context, *UpdateLastReadMsgRep) (*CommonResponse, error) {
+func (UnimplementedAiServiceServer) UpdateAiMsgLastRead(context.Context, *UpdateLastReadMsgRep) (*CommonResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateAiMsgLastRead not implemented")
 }
-func (UnimplementedChatServiceServer) mustEmbedUnimplementedChatServiceServer() {}
-func (UnimplementedChatServiceServer) testEmbeddedByValue()                     {}
+func (UnimplementedAiServiceServer) mustEmbedUnimplementedAiServiceServer() {}
+func (UnimplementedAiServiceServer) testEmbeddedByValue()                   {}
 
-// UnsafeChatServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to ChatServiceServer will
+// UnsafeAiServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to AiServiceServer will
 // result in compilation errors.
-type UnsafeChatServiceServer interface {
-	mustEmbedUnimplementedChatServiceServer()
+type UnsafeAiServiceServer interface {
+	mustEmbedUnimplementedAiServiceServer()
 }
 
-func RegisterChatServiceServer(s grpc.ServiceRegistrar, srv ChatServiceServer) {
-	// If the following call panics, it indicates UnimplementedChatServiceServer was
+func RegisterAiServiceServer(s grpc.ServiceRegistrar, srv AiServiceServer) {
+	// If the following call panics, it indicates UnimplementedAiServiceServer was
 	// embedded by pointer and is nil.  This will cause panics if an
 	// unimplemented method is ever invoked, so we test this at initialization
 	// time to prevent it from happening at runtime later due to I/O.
 	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
 		t.testEmbeddedByValue()
 	}
-	s.RegisterService(&ChatService_ServiceDesc, srv)
+	s.RegisterService(&AiService_ServiceDesc, srv)
 }
 
-func _ChatService_SetAgentInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _AiService_SetAgentInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SetAgentInfoReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ChatServiceServer).SetAgentInfo(ctx, in)
+		return srv.(AiServiceServer).SetAgentInfo(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ChatService_SetAgentInfo_FullMethodName,
+		FullMethod: AiService_SetAgentInfo_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChatServiceServer).SetAgentInfo(ctx, req.(*SetAgentInfoReq))
+		return srv.(AiServiceServer).SetAgentInfo(ctx, req.(*SetAgentInfoReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ChatService_GetAgentInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _AiService_GetAgentInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetAgentInfoReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ChatServiceServer).GetAgentInfo(ctx, in)
+		return srv.(AiServiceServer).GetAgentInfo(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ChatService_GetAgentInfo_FullMethodName,
+		FullMethod: AiService_GetAgentInfo_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChatServiceServer).GetAgentInfo(ctx, req.(*GetAgentInfoReq))
+		return srv.(AiServiceServer).GetAgentInfo(ctx, req.(*GetAgentInfoReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ChatService_GetSessionList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _AiService_GetSessionList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetSessionListReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ChatServiceServer).GetSessionList(ctx, in)
+		return srv.(AiServiceServer).GetSessionList(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ChatService_GetSessionList_FullMethodName,
+		FullMethod: AiService_GetSessionList_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChatServiceServer).GetSessionList(ctx, req.(*GetSessionListReq))
+		return srv.(AiServiceServer).GetSessionList(ctx, req.(*GetSessionListReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ChatService_SendLLMMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _AiService_ComposeAiMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SendMessageToAiReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ChatServiceServer).SendLLMMessage(ctx, in)
+		return srv.(AiServiceServer).ComposeAiMessage(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ChatService_SendLLMMessage_FullMethodName,
+		FullMethod: AiService_ComposeAiMessage_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChatServiceServer).SendLLMMessage(ctx, req.(*SendMessageToAiReq))
+		return srv.(AiServiceServer).ComposeAiMessage(ctx, req.(*SendMessageToAiReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ChatService_GetHistoryAiMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _AiService_CallLlm_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CallLlmReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AiServiceServer).CallLlm(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AiService_CallLlm_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AiServiceServer).CallLlm(ctx, req.(*CallLlmReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AiService_GetHistoryAiMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetChatHistoryMessagesFromAIReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ChatServiceServer).GetHistoryAiMessage(ctx, in)
+		return srv.(AiServiceServer).GetHistoryAiMessage(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ChatService_GetHistoryAiMessage_FullMethodName,
+		FullMethod: AiService_GetHistoryAiMessage_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChatServiceServer).GetHistoryAiMessage(ctx, req.(*GetChatHistoryMessagesFromAIReq))
+		return srv.(AiServiceServer).GetHistoryAiMessage(ctx, req.(*GetChatHistoryMessagesFromAIReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ChatService_GetUnreadAiMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _AiService_GetUnreadAiMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetChatUnreadMessagesFromAIReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ChatServiceServer).GetUnreadAiMessage(ctx, in)
+		return srv.(AiServiceServer).GetUnreadAiMessage(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ChatService_GetUnreadAiMessage_FullMethodName,
+		FullMethod: AiService_GetUnreadAiMessage_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChatServiceServer).GetUnreadAiMessage(ctx, req.(*GetChatUnreadMessagesFromAIReq))
+		return srv.(AiServiceServer).GetUnreadAiMessage(ctx, req.(*GetChatUnreadMessagesFromAIReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ChatService_UpdateAiMsgLastRead_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _AiService_UpdateAiMsgLastRead_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateLastReadMsgRep)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ChatServiceServer).UpdateAiMsgLastRead(ctx, in)
+		return srv.(AiServiceServer).UpdateAiMsgLastRead(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ChatService_UpdateAiMsgLastRead_FullMethodName,
+		FullMethod: AiService_UpdateAiMsgLastRead_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChatServiceServer).UpdateAiMsgLastRead(ctx, req.(*UpdateLastReadMsgRep))
+		return srv.(AiServiceServer).UpdateAiMsgLastRead(ctx, req.(*UpdateLastReadMsgRep))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// ChatService_ServiceDesc is the grpc.ServiceDesc for ChatService service.
+// AiService_ServiceDesc is the grpc.ServiceDesc for AiService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var ChatService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "ai.ChatService",
-	HandlerType: (*ChatServiceServer)(nil),
+var AiService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "ai.AiService",
+	HandlerType: (*AiServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "SetAgentInfo",
-			Handler:    _ChatService_SetAgentInfo_Handler,
+			Handler:    _AiService_SetAgentInfo_Handler,
 		},
 		{
 			MethodName: "GetAgentInfo",
-			Handler:    _ChatService_GetAgentInfo_Handler,
+			Handler:    _AiService_GetAgentInfo_Handler,
 		},
 		{
 			MethodName: "GetSessionList",
-			Handler:    _ChatService_GetSessionList_Handler,
+			Handler:    _AiService_GetSessionList_Handler,
 		},
 		{
-			MethodName: "SendLLMMessage",
-			Handler:    _ChatService_SendLLMMessage_Handler,
+			MethodName: "ComposeAiMessage",
+			Handler:    _AiService_ComposeAiMessage_Handler,
+		},
+		{
+			MethodName: "CallLlm",
+			Handler:    _AiService_CallLlm_Handler,
 		},
 		{
 			MethodName: "GetHistoryAiMessage",
-			Handler:    _ChatService_GetHistoryAiMessage_Handler,
+			Handler:    _AiService_GetHistoryAiMessage_Handler,
 		},
 		{
 			MethodName: "GetUnreadAiMessage",
-			Handler:    _ChatService_GetUnreadAiMessage_Handler,
+			Handler:    _AiService_GetUnreadAiMessage_Handler,
 		},
 		{
 			MethodName: "UpdateAiMsgLastRead",
-			Handler:    _ChatService_UpdateAiMsgLastRead_Handler,
+			Handler:    _AiService_UpdateAiMsgLastRead_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

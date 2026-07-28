@@ -33,5 +33,5 @@ func (l *UpdateAiMsgLastReadLogic) UpdateAiMsgLastRead(in *ai.UpdateLastReadMsgR
 		return &ai.CommonResponse{Code: 400, Msg: err.Error()}, nil
 	}
 
-	return &ai.CommonResponse{Code: 100, Msg: "OK"}, nil
+	return &ai.CommonResponse{Code: 200, Msg: "OK"}, nil
 }

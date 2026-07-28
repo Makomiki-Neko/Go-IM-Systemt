@@ -22,8 +22,8 @@ type ChatMessage struct {
 type ChatCompletionRequest struct {
 	Model       string        `json:"model"`
 	Messages    []ChatMessage `json:"messages"`
-	Temperature float64       `json:"temperature,omitempty"`
-	TopP        float64       `json:"top_p,omitempty"`
+	Temperature float32       `json:"temperature,omitempty"`
+	TopP        float32       `json:"top_p,omitempty"`
 	Stream      bool          `json:"stream"` // 是否流式
 	MaxTokens   int           `json:"max_tokens,omitempty"`
 }

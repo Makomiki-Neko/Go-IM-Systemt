@@ -33,5 +33,5 @@ func (l *SetAgentInfoLogic) SetAgentInfo(in *ai.SetAgentInfoReq) (*ai.CommonResp
 		return nil, err
 	}
 
-	return &ai.CommonResponse{Code: 100, Msg: "OK"}, nil
+	return &ai.CommonResponse{Code: 200, Msg: "OK"}, nil
 }

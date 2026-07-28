@@ -80,6 +80,12 @@ message SendMessageResp {
     CommonResponse CommonResponse = 3;
 }
 
+message CallLlmReq{
+    uint64 user_id = 1;
+    uint64 session_id = 2;
+    bytes req = 3;
+}
+
 // ---------- 拉取历史对话（接收消息） ----------
 // 拉取已读消息
 message GetChatHistoryMessagesFromAIReq {
@@ -106,7 +112,7 @@ message UpdateLastReadMsgRep {
 
 
 // ---------- 服务定义 ----------
-service ChatService {
+service AiService {
     // 自定义智能体
     rpc SetAgentInfo(SetAgentInfoReq) returns (CommonResponse);
     
@@ -116,10 +122,11 @@ service ChatService {
     // 拉取会话列表
     rpc GetSessionList (GetSessionListReq) returns (GetSessionListResp);
 
-    // 发送消息给LLM
-    rpc SendLLMMessage(SendMessageToAiReq) returns (SendMessageResp);
+    // 构建 Ai 请求体
+    rpc ComposeAiMessage(SendMessageToAiReq) returns (SendMessageResp);
 
-    // LLM推送消息
+    // 调用 LLM 服务
+    rpc CallLlm(CallLlmReq) returns (CommonResponse);
 
     // 拉取历史消息, WS推送
     rpc GetHistoryAiMessage (GetChatHistoryMessagesFromAIReq) returns (CommonResponse);

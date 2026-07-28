@@ -8,9 +8,12 @@ import (
 type Config struct {
 	zrpc.RpcServerConf
 	LLM struct {
-		Api   string
-		Key   string
-		Model string
+		Api         string
+		Key         string
+		Model       string
+		Temperature float32
+		TopP        float32
+		MaxTokens   int
 	}
 	DB struct {
 		DataSource string

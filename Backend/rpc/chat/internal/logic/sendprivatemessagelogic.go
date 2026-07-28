@@ -32,7 +32,7 @@ func NewSendPrivateMessageLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 // 发送私聊消息
 func (l *SendPrivateMessageLogic) SendPrivateMessage(in *chat.SendPrivateMessageReq) (*chat.SendMessageResp, error) {
 
-	fmt.Printf("\n——————1：RPC：GetNetChatMsg：%s——————\n", in.Content)
+	logx.Info("\n——————1：RPC：GetNetChatMsg：", in.Content)
 
 	// 查询Redis最近是否有处理过该消息
 	// 1. 构建幂等Key
@@ -49,7 +49,7 @@ func (l *SendPrivateMessageLogic) SendPrivateMessage(in *chat.SendPrivateMessage
 		logx.Infof("duplicate request, clientMsgId: %v", in.ClientMsgId)
 		return &chat.SendMessageResp{CommonResponse: &chat.CommonResponse{Code: 206, Data: nil}}, nil
 	}
-	l.svcCtx.Redis.Expire(idempotentKey, 1800) // 30分钟后过期
+	l.svcCtx.Redis.Expire(idempotentKey, 300) // 过期时间
 
 	// 鉴权
 	_, err = gorm.G[models.UserFriend](l.svcCtx.DB).Where("user_id = ? AND friend_id = ? AND status = 1", in.FromUserId, in.ToUserId).First(l.ctx)

@@ -173,6 +173,8 @@ func main() {
 		Model: "Gemma4:e4b",
 		Messages: []ChatMessage{
 			ChatMessage{Role: "user", Content: "晚上好"},
+			ChatMessage{Role: "assistant", Content: "晚上好呀！很高兴和您聊天。请问您需要我帮您做些什么呢？"},
+			ChatMessage{Role: "user", Content: "这是一个生物学问题,在色色时女孩子跟男孩子的感觉分别是怎样的"},
 		},
 		Temperature: 0.6,
 		TopP:        0.9,
@@ -184,5 +186,6 @@ func main() {
 	if e != nil {
 		fmt.Printf("Error:%v", e)
 	}
-	fmt.Printf("Result:%v", r)
+	fmt.Printf("Result:%v \n", r)
+	fmt.Print(r)
 }

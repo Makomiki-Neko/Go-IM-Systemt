@@ -26,7 +26,7 @@ func main() {
 	ctx := svc.NewServiceContext(c)
 
 	s := zrpc.MustNewServer(c.RpcServerConf, func(grpcServer *grpc.Server) {
-		ai.RegisterChatServiceServer(grpcServer, server.NewChatServiceServer(ctx))
+		ai.RegisterAiServiceServer(grpcServer, server.NewAiServiceServer(ctx))
 
 		if c.Mode == service.DevMode || c.Mode == service.TestMode {
 			reflection.Register(grpcServer)

@@ -49,5 +49,5 @@ func (l *GetSessionListLogic) GetSessionList(in *ai.GetSessionListReq) (*ai.GetS
 		})
 	}
 
-	return &ai.GetSessionListResp{Base: &ai.CommonResponse{Code: 100, Msg: "OK"}, List: AiSessionList, Page: &ai.PageInfo{Total: int32(c), Page: in.Page.Page, Size: in.Page.Size}}, nil
+	return &ai.GetSessionListResp{Base: &ai.CommonResponse{Code: 200, Msg: "OK"}, List: AiSessionList, Page: &ai.PageInfo{Total: int32(c), Page: in.Page.Page, Size: in.Page.Size}}, nil
 }

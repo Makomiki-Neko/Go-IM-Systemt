@@ -25,6 +25,12 @@ ChatRpc:
     - 127.0.0.1:12379
     Key: chat.rpc
 
+ChatRpc:
+  Etcd:
+    Hosts:
+    - 127.0.0.1:12379
+    Key: ai.rpc
+
 SeaweedFS_S3:
   Region: "ap-northeast-2" # 区域是 SDK 必填项，SeaweedFS 不校验
   Endpoint: "http://localhost:8333" # S3 Gateway 地址

@@ -2,7 +2,7 @@
 // goctl 1.10.1
 // Source: ai.proto
 
-package chatservice
+package aiservice
 
 import (
 	"context"
@@ -14,6 +14,7 @@ import (
 )
 
 type (
+	CallLlmReq                      = ai.CallLlmReq
 	CommonResponse                  = ai.CommonResponse
 	GetAgentInfoReq                 = ai.GetAgentInfoReq
 	GetAgentInfoResp                = ai.GetAgentInfoResp
@@ -29,15 +30,17 @@ type (
 	SetAgentInfoReq                 = ai.SetAgentInfoReq
 	UpdateLastReadMsgRep            = ai.UpdateLastReadMsgRep
 
-	ChatService interface {
+	AiService interface {
 		// 自定义智能体
 		SetAgentInfo(ctx context.Context, in *SetAgentInfoReq, opts ...grpc.CallOption) (*CommonResponse, error)
 		// 获取智能体信息
 		GetAgentInfo(ctx context.Context, in *GetAgentInfoReq, opts ...grpc.CallOption) (*GetAgentInfoResp, error)
 		// 拉取会话列表
 		GetSessionList(ctx context.Context, in *GetSessionListReq, opts ...grpc.CallOption) (*GetSessionListResp, error)
-		// 发送消息给LLM
-		SendLLMMessage(ctx context.Context, in *SendMessageToAiReq, opts ...grpc.CallOption) (*SendMessageResp, error)
+		// 构建 Ai 请求体
+		ComposeAiMessage(ctx context.Context, in *SendMessageToAiReq, opts ...grpc.CallOption) (*SendMessageResp, error)
+		// 调用 LLM 服务
+		CallLlm(ctx context.Context, in *CallLlmReq, opts ...grpc.CallOption) (*CommonResponse, error)
 		// 拉取历史消息, WS推送
 		GetHistoryAiMessage(ctx context.Context, in *GetChatHistoryMessagesFromAIReq, opts ...grpc.CallOption) (*CommonResponse, error)
 		// 拉取新消息，WS推送
@@ -46,55 +49,61 @@ type (
 		UpdateAiMsgLastRead(ctx context.Context, in *UpdateLastReadMsgRep, opts ...grpc.CallOption) (*CommonResponse, error)
 	}
 
-	defaultChatService struct {
+	defaultAiService struct {
 		cli zrpc.Client
 	}
 )
 
-func NewChatService(cli zrpc.Client) ChatService {
-	return &defaultChatService{
+func NewAiService(cli zrpc.Client) AiService {
+	return &defaultAiService{
 		cli: cli,
 	}
 }
 
 // 自定义智能体
-func (m *defaultChatService) SetAgentInfo(ctx context.Context, in *SetAgentInfoReq, opts ...grpc.CallOption) (*CommonResponse, error) {
-	client := ai.NewChatServiceClient(m.cli.Conn())
+func (m *defaultAiService) SetAgentInfo(ctx context.Context, in *SetAgentInfoReq, opts ...grpc.CallOption) (*CommonResponse, error) {
+	client := ai.NewAiServiceClient(m.cli.Conn())
 	return client.SetAgentInfo(ctx, in, opts...)
 }
 
 // 获取智能体信息
-func (m *defaultChatService) GetAgentInfo(ctx context.Context, in *GetAgentInfoReq, opts ...grpc.CallOption) (*GetAgentInfoResp, error) {
-	client := ai.NewChatServiceClient(m.cli.Conn())
+func (m *defaultAiService) GetAgentInfo(ctx context.Context, in *GetAgentInfoReq, opts ...grpc.CallOption) (*GetAgentInfoResp, error) {
+	client := ai.NewAiServiceClient(m.cli.Conn())
 	return client.GetAgentInfo(ctx, in, opts...)
 }
 
 // 拉取会话列表
-func (m *defaultChatService) GetSessionList(ctx context.Context, in *GetSessionListReq, opts ...grpc.CallOption) (*GetSessionListResp, error) {
-	client := ai.NewChatServiceClient(m.cli.Conn())
+func (m *defaultAiService) GetSessionList(ctx context.Context, in *GetSessionListReq, opts ...grpc.CallOption) (*GetSessionListResp, error) {
+	client := ai.NewAiServiceClient(m.cli.Conn())
 	return client.GetSessionList(ctx, in, opts...)
 }
 
-// 发送消息给LLM
-func (m *defaultChatService) SendLLMMessage(ctx context.Context, in *SendMessageToAiReq, opts ...grpc.CallOption) (*SendMessageResp, error) {
-	client := ai.NewChatServiceClient(m.cli.Conn())
-	return client.SendLLMMessage(ctx, in, opts...)
+// 构建 Ai 请求体
+func (m *defaultAiService) ComposeAiMessage(ctx context.Context, in *SendMessageToAiReq, opts ...grpc.CallOption) (*SendMessageResp, error) {
+	client := ai.NewAiServiceClient(m.cli.Conn())
+	return client.ComposeAiMessage(ctx, in, opts...)
+}
+
+// 调用 LLM 服务
+func (m *defaultAiService) CallLlm(ctx context.Context, in *CallLlmReq, opts ...grpc.CallOption) (*CommonResponse, error) {
+	client := ai.NewAiServiceClient(m.cli.Conn())
+	return client.CallLlm(ctx, in, opts...)
 }
 
 // 拉取历史消息, WS推送
-func (m *defaultChatService) GetHistoryAiMessage(ctx context.Context, in *GetChatHistoryMessagesFromAIReq, opts ...grpc.CallOption) (*CommonResponse, error) {
-	client := ai.NewChatServiceClient(m.cli.Conn())
+func (m *defaultAiService) GetHistoryAiMessage(ctx context.Context, in *GetChatHistoryMessagesFromAIReq, opts ...grpc.CallOption) (*CommonResponse, error) {
+	client := ai.NewAiServiceClient(m.cli.Conn())
 	return client.GetHistoryAiMessage(ctx, in, opts...)
 }
 
 // 拉取新消息，WS推送
-func (m *defaultChatService) GetUnreadAiMessage(ctx context.Context, in *GetChatUnreadMessagesFromAIReq, opts ...grpc.CallOption) (*CommonResponse, error) {
-	client := ai.NewChatServiceClient(m.cli.Conn())
+func (m *defaultAiService) GetUnreadAiMessage(ctx context.Context, in *GetChatUnreadMessagesFromAIReq, opts ...grpc.CallOption) (*CommonResponse, error) {
+	client := ai.NewAiServiceClient(m.cli.Conn())
 	return client.GetUnreadAiMessage(ctx, in, opts...)
 }
 
 // 更新用户最后已读信息
-func (m *defaultChatService) UpdateAiMsgLastRead(ctx context.Context, in *UpdateLastReadMsgRep, opts ...grpc.CallOption) (*CommonResponse, error) {
-	client := ai.NewChatServiceClient(m.cli.Conn())
+func (m *defaultAiService) UpdateAiMsgLastRead(ctx context.Context, in *UpdateLastReadMsgRep, opts ...grpc.CallOption) (*CommonResponse, error) {
+	client := ai.NewAiServiceClient(m.cli.Conn())
 	return client.UpdateAiMsgLastRead(ctx, in, opts...)
 }

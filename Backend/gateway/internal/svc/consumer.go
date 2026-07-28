@@ -3,6 +3,8 @@ package svc
 import (
 	"IMM/common/pkg"
 	"IMM/common/types"
+	"IMM/rpc/ai/ai"
+	"context"
 	"encoding/json"
 	"log"
 	"time"
@@ -108,6 +110,67 @@ func StartMqChatConsumer(svcCtx *ServiceContext) {
 				Data:      chat.Data,
 				Timestamp: time.Now().Unix(),
 			})
+		}
+	}
+}
+
+// Ai模块MQ消费者，用于消费队列 "im.gateway.push.ai", 暂且顺序调用 LLM 处理
+func StartMqAiConsumer(svcCtx *ServiceContext) {
+	// 从 channel 中消费消息，手动 ack
+	events, err := svcCtx.MqEventChannel.Consume(
+		"im.gateway.push.ai", // 队列名
+		"",                   // consumer tag（自动生成）
+		false,                // auto-ack: false，手动确认
+		false,                // exclusive
+		false,                // no-local
+		false,                // no-wait
+		nil,                  // args
+	)
+	if err != nil {
+		log.Fatalf("failed to consume: %v", err)
+	}
+
+	// 无限循环处理消息
+	for msg := range events {
+		// 解析消息体
+		var event types.MqMsg
+		if err := json.Unmarshal(msg.Body, &event); err != nil {
+			logx.Errorf("unmarshal error: %v", err)
+			msg.Nack(false, false) // 无法解析，直接拒绝不重试
+			continue
+		}
+
+		r, e := svcCtx.AiRPC.CallLlm(context.Background(), &ai.CallLlmReq{
+			UserId:    event.Uid,
+			SessionId: event.ReqId,
+			Req:       event.Data,
+		})
+
+		var pushMsg []byte
+
+		if e != nil {
+			logx.Info("Call LLM Failed:", e)
+			// 出错推送错误
+			pushMsg, _ = json.Marshal(map[string]interface{}{
+				"req_id": event.ReqId,
+				"type":   "ai.LlmResponse.Error",
+				"data":   "Server Error.",
+			})
+		} else {
+			// 构造推送内容（可以包含 请求ID、type 和 data）
+			pushMsg, _ = json.Marshal(map[string]interface{}{
+				"req_id": event.ReqId, // 对应SessionID
+				"type":   "ai.LlmResponse.Ok",
+				"data":   r.Data, // 直接为LLM响应内容的byte序列
+			})
+		}
+
+		// 调用 Hub 推送给目标用户
+		if svcCtx.ClientHub.SendToUser(event.Uid, pushMsg) {
+			msg.Ack(false) // 确认消费成功
+		} else {
+			// 投递失败，Ack后不重回消息队列，存至死信队列
+			msg.Ack(false)
 		}
 	}
 }

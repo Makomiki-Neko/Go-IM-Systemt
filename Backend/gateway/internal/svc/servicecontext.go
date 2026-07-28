@@ -7,6 +7,7 @@ import (
 	"IMM/common/pkg"
 	"IMM/gateway/internal/config"
 	"IMM/gateway/internal/hub"
+	"IMM/rpc/ai/aiservice"
 	"IMM/rpc/chat/chatservice"
 	"context"
 	"fmt"
@@ -29,6 +30,7 @@ type ServiceContext struct {
 	MqMsgChannel   *amqp091.Channel    // 消息队列
 	OffLineStorage *pkg.RedisStorage
 	ChatRPC        chatservice.ChatService
+	AiRPC          aiservice.AiService
 	S3             *s3.S3
 }
 
@@ -58,12 +60,14 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	// 声明 Gateway 队列
 	queueEvent, err := ch.QueueDeclare("im.gateway.push.event", true, false, false, false, nil)
 	queueChat, err := ch.QueueDeclare("im.gateway.push.chat", true, false, false, false, nil)
+	queueAi, err := ch.QueueDeclare("im.gateway.push.ai", true, false, false, false, nil) // LLM 调用请求队列
 	if err != nil {
 		log.Fatalf("failed to declare queue: %v", err)
 	}
 
-	// 绑定队列到交换机，路由键为 "push.*"（或更精确的 "push.friend", "push.group" 等）
+	// 绑定队列到交换机
 	err = ch.QueueBind(queueEvent.Name, "im.gateway.push.event.#", "im.events", false, nil)
+	err = ch.QueueBind(queueAi.Name, "im.gateway.push.ai.#", "im.events", false, nil)
 	err = ch.QueueBind(queueChat.Name, "im.gateway.push.chat.#", "im.chat", false, nil)
 	if err != nil {
 		log.Fatalf("failed to bind queue: %v", err)
@@ -93,6 +97,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 			Ctx: context.Background(),
 		},
 		ChatRPC: chatservice.NewChatService(zrpc.MustNewClient(c.ChatRPC)),
+		AiRPC:   aiservice.NewAiService(zrpc.MustNewClient(c.AiRPC)),
 		S3:      s3,
 	}
 

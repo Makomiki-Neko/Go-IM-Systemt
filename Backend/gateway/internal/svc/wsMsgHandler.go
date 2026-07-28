@@ -3,6 +3,7 @@ package svc
 import (
 	"IMM/common/types"
 	"IMM/gateway/internal/hub"
+	"IMM/rpc/ai/ai"
 	"IMM/rpc/chat/chat"
 	"context"
 	"encoding/json"
@@ -50,6 +51,8 @@ func HandleMessage(client *hub.Client, data []byte, svcCtx *ServiceContext) {
 		// 客户端确认消息，可能更新消息状态
 		handleAck(client, req.ReqId, req.Payload, bus[1], svcCtx)
 		//logx.Infof("ack received: %d", req.ReqId)
+	case "ai":
+		handleAi(client, req.ReqId, req.Payload, bus[1], svcCtx)
 	default:
 		sendErrorResponse(client, req.ReqId, "unknown type", svcCtx)
 	}
@@ -59,7 +62,7 @@ func handleChat(client *hub.Client, reqId uint64, payload json.RawMessage, msgTy
 	// 解析业务操作类型，进行业务处理（调用RPC处理消息，然后转发给目标用户）
 	ctx := context.Background()
 	switch msgType {
-		case "SendPrivateMsg":
+	case "SendPrivateMsg":
 		//fmt.Printf("\n ————————Handle:%s———————— \n", msgType)
 		var in struct {
 			FromUserId  uint64 `json:"from_user_id,string"`
@@ -458,6 +461,175 @@ func handleFile(client *hub.Client, reqId uint64, payload json.RawMessage, msgTy
 				Timestamp:    time.Now(),
 			},
 		)
+	}
+}
+
+func handleAi(client *hub.Client, reqId uint64, payload json.RawMessage, msgType string, svcCtx *ServiceContext) {
+	// 解析业务操作类型，进行业务处理（调用RPC处理消息，然后发给用户）,
+	ctx := context.Background()
+	switch msgType {
+	case "SendMsgToAi":
+		var in struct {
+			UserId      uint64 `json:"user_id,string"`
+			SessionID   uint64 `json:"session_id,string"`
+			MsgType     int32  `json:"msg_type"`
+			Content     string `json:"content"`
+			ClientMsgId uint64 `json:"client_msg_id"`
+		}
+		err := json.Unmarshal(payload, &in)
+		if err != nil {
+			sendErrorResponse(client, reqId, errors.New("Failed to Unmarshal Payload, err: "+err.Error()).Error(), svcCtx)
+			return
+		}
+
+		// 组装Ai请求体
+		r, err := svcCtx.AiRPC.ComposeAiMessage(ctx, &ai.SendMessageToAiReq{
+			UserId:      in.UserId,
+			SessionId:   in.SessionID,
+			MsgType:     in.MsgType,
+			Content:     in.Content,
+			ClientMsgId: in.ClientMsgId,
+		})
+		if err != nil {
+			sendErrorResponse(client, reqId, err.Error(), svcCtx)
+			return
+		}
+
+		// 发送消息ACK给客户端
+		d, _ := json.Marshal(map[string]string{
+			"msg_id":        strconv.FormatUint(r.MsgId, 10),
+			"client_msg_id": strconv.FormatUint(in.ClientMsgId, 10),
+			"send_time":     strconv.FormatInt(r.SendTime, 10),
+		})
+		ackbody, _ := packagePushMsg(reqId, in.UserId, "ack.Msg", d)
+		err = svcCtx.MqMsgChannel.Publish(
+			"im.events",
+			"im.gateway.push.event.ack.ai",
+			false,
+			false,
+			amqp091.Publishing{
+				DeliveryMode: amqp091.Transient,
+				ContentType:  "application/json",
+				Body:         ackbody,
+				Timestamp:    time.Now(),
+			},
+		)
+
+		// 封装推送Ai请求至 LLM 服务
+		// 将Session封装进ReqID字段，LLM队列不需要发送Req
+		body, err := packagePushMsg(in.SessionID, in.UserId, "ai.LlmRequest", r.CommonResponse.Data)
+		if err != nil {
+			sendErrorResponse(client, reqId, err.Error(), svcCtx)
+			return
+		}
+		// 投递消息
+		err = svcCtx.MqMsgChannel.Publish(
+			"im.chat",
+			"im.gateway.push.ai.LlmRequest",
+			false,
+			false,
+			amqp091.Publishing{
+				DeliveryMode: amqp091.Persistent, // 消息持久化
+				ContentType:  "application/json",
+				Body:         body,
+				Timestamp:    time.Now(),
+			},
+		)
+		if err != nil {
+			sendErrorResponse(client, reqId, errors.New("Push Failed, Error: "+err.Error()).Error(), svcCtx)
+		}
+
+	case "GetNewAiMsg":
+		var in struct {
+			UserId     uint64 `json:"user_id,string"`
+			SessionID  uint64 `json:"session_id,string"`
+			StartMsgId uint64 `json:"start_msg_id,string"`
+			Limit      int32  `json:"limit"`
+		}
+		err := json.Unmarshal(payload, &in)
+		if err != nil {
+			sendErrorResponse(client, reqId, errors.New("Failed to Unmarshal Payload, err: "+err.Error()).Error(), svcCtx)
+			return
+		}
+		r, err := svcCtx.AiRPC.GetUnreadAiMessage(ctx, &ai.GetChatUnreadMessagesFromAIReq{
+			UserId:     in.UserId,
+			SessionId:  in.SessionID,
+			StartMsgId: in.StartMsgId,
+			Limit:      in.Limit,
+		})
+		if err != nil {
+			sendErrorResponse(client, reqId, err.Error(), svcCtx)
+			return
+		}
+		// 封装推送消息
+		body, err := packagePushMsg(reqId, in.UserId, "ai.NewMsgBlock", r.Data)
+		if err != nil {
+			sendErrorResponse(client, reqId, err.Error(), svcCtx)
+			return
+		}
+		// 投递消息
+		err = svcCtx.MqMsgChannel.Publish(
+			"im.chat",
+			"im.gateway.push.chat.ai",
+			false,
+			false,
+			amqp091.Publishing{
+				DeliveryMode: amqp091.Persistent, // 消息持久化
+				ContentType:  "application/json",
+				Body:         body,
+				Timestamp:    time.Now(),
+			},
+		)
+		if err != nil {
+			sendErrorResponse(client, reqId, errors.New("Push Failed, Error: "+err.Error()).Error(), svcCtx)
+		}
+	case "GetHistoryAiMsg":
+		var in struct {
+			UserId     uint64 `json:"user_id,string"`
+			SessionID  uint64 `json:"session_id,string"`
+			StartMsgId uint64 `json:"start_msg_id,string"`
+			Limit      int32  `json:"limit"`
+		}
+		err := json.Unmarshal(payload, &in)
+		if err != nil {
+			sendErrorResponse(client, reqId, errors.New("Failed to Unmarshal Payload, err: "+err.Error()).Error(), svcCtx)
+			return
+		}
+		r, err := svcCtx.AiRPC.GetHistoryAiMessage(ctx, &ai.GetChatHistoryMessagesFromAIReq{
+			UserId:     in.UserId,
+			SessionId:  in.SessionID,
+			StartMsgId: in.StartMsgId,
+			Limit:      in.Limit,
+		})
+		if err != nil {
+			sendErrorResponse(client, reqId, err.Error(), svcCtx)
+			return
+		}
+		// 封装推送消息
+		body, err := packagePushMsg(reqId, in.UserId, "ai.HistoryMsgBlock", r.Data)
+		if err != nil {
+			sendErrorResponse(client, reqId, err.Error(), svcCtx)
+			return
+		}
+		// 投递消息
+		err = svcCtx.MqMsgChannel.Publish(
+			"im.chat",
+			"im.gateway.push.chat.ai",
+			false,
+			false,
+			amqp091.Publishing{
+				DeliveryMode: amqp091.Persistent, // 消息持久化
+				ContentType:  "application/json",
+				Body:         body,
+				Timestamp:    time.Now(),
+			},
+		)
+		if err != nil {
+			sendErrorResponse(client, reqId, errors.New("Push Failed, Error: "+err.Error()).Error(), svcCtx)
+		}
+
+	default:
+		sendErrorResponse(client, reqId, "Unknown Type.", svcCtx)
 	}
 }
 
