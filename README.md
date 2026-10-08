@@ -20,10 +20,43 @@
 - **缓存**：Redis
 - **消息队列**：RabbitMQ
 - **分布式文件存储**：SeaweedFS-S3
+- **LLM API**：OpenAI Chat Completions
+- **服务发现**：ETCD
 - **容器化部署**：Docker
 ### Web
 - **VUE**
 - **JS**
+
+```mermaid
+flowchart LR
+    Client[Web / 其他客户端] -->|HTTP + JWT| API[API :8888]
+    Client <-->|WebSocket + JWT| GW[Gateway :8889]
+    API --> User[User RPC :9001]
+    API --> Relation[Relation RPC :9002]
+    API --> Chat[Chat RPC :9003]
+    GW --> Chat
+    GW --> AI[AI RPC :9004]
+    User --> DB[(MySQL)]
+    Relation --> DB
+    Chat --> DB
+    AI --> DB
+    User --> Redis[(Redis)]
+    Relation --> Redis
+    Chat --> Redis
+    AI --> Redis
+    GW --> Redis
+    Relation -->|群 Outbox / 好友事件| MQ[RabbitMQ]
+    Chat -->|群 Outbox| MQ
+    GW -->|旧私聊链路| MQ
+    AI <-->|任务及结果 Outbox| MQ
+    MQ --> GW
+    AI --> LLM[模型服务]
+    API -->|头像上传 Filer| FS[SeaweedFS]
+    GW -->|生成 S3 PUT 签名| FS
+    Client -->|文件直传| FS
+```
+
+ETCD 提供 RPC 注册与发现，未在图中展开。各进程默认共享 MySQL `gozero`；服务边界目前不等于数据库隔离边界。
 
 ## 架构分层
 - 客户端
