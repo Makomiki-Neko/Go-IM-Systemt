@@ -1,0 +1,32 @@
+{
+  "name": "qiyu-im-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "tsx --test tests/*.test.ts",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "vue": "^3.5.0",
+    "lucide-vue-next": "^0.468.0",
+    "lossless-json": "^4.0.2",
+    "@fontsource/manrope": "^5.1.0",
+    "@fontsource/noto-sans-sc": "^5.1.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.0",
+    "@types/node": "^22.10.0",
+    "@playwright/test": "^1.49.0",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "typescript": "~5.6.3",
+    "tsx": "^4.19.0",
+    "vite": "^5.4.11",
+    "vue-tsc": "^2.2.0"
+  }
+}
